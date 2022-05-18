@@ -1359,6 +1359,12 @@ void Spell::EffectHealthLeech(SpellEffIndex /*effIndex*/)
     float healMultiplier = effectInfo->CalcValueMultiplier(m_originalCaster, this);
 
     m_damage += damage;
+
+    DamageInfo damageInfo(m_caster, unitTarget, damage, m_spellInfo, m_spellInfo->GetSchoolMask(), SPELL_DIRECT_DAMAGE, BASE_ATTACK);
+    m_caster->CalcAbsorbResist(damageInfo);
+    uint32 const absorb = damageInfo.GetAbsorb();
+    damage -= absorb;
+
     // get max possible damage, don't count overkill for heal
     uint32 healthGain = uint32(-unitTarget->GetHealthGain(-damage) * healMultiplier);
 
