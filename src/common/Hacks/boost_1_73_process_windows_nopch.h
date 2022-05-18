@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2019 TrinityCore <https://www.trinitycore.org/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -15,21 +15,16 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef DeadlineTimer_h__
-#define DeadlineTimer_h__
+#ifndef boost_1_73_process_windows_nopch_h__
+#define boost_1_73_process_windows_nopch_h__
 
-#include <boost/asio/deadline_timer.hpp>
+#include "CompilerDefs.h"
+#include <boost/version.hpp>
 
-namespace Trinity
-{
-    namespace Asio
-    {
-        class DeadlineTimer : public boost::asio::basic_deadline_timer<boost::posix_time::ptime, boost::asio::time_traits<boost::posix_time::ptime>, boost::asio::io_context::executor_type>
-        {
-        public:
-            using basic_deadline_timer::basic_deadline_timer;
-        };
-    }
-}
+#if TRINITY_PLATFORM == TRINITY_PLATFORM_WINDOWS && BOOST_VERSION >= 107300 && BOOST_VERSION < 107800
+// __kernel_entry for boost/process/detail/windows/handle_workaround.hpp
+// DWORD for boost/process/detail/windows/handles.hpp
+#include <windows.h>
+#endif
 
-#endif // DeadlineTimer_h__
+#endif // boost_1_73_process_windows_nopch_h__

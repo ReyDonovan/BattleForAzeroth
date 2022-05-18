@@ -64,6 +64,8 @@
     #include <cpr/cpr.h>
 #endif
 
+#include "Hacks/boost_program_options_with_filesystem_path.h"
+
 using namespace boost::program_options;
 namespace fs = boost::filesystem;
 

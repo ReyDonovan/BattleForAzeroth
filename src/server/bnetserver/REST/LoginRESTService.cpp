@@ -83,10 +83,10 @@ bool LoginRESTService::Start(Trinity::Asio::IoContext* ioContext)
     }
 
     boost::system::error_code ec;
-    boost::asio::ip::tcp::resolver resolver(*ioContext);
+    Trinity::Asio::Resolver resolver(*ioContext);
 
     std::string configuredAddress = sConfigMgr->GetStringDefault("LoginREST.ExternalAddress", "127.0.0.1");
-    Optional<boost::asio::ip::tcp::endpoint> externalAddress = Trinity::Net::Resolve(resolver, boost::asio::ip::tcp::v4(), configuredAddress, std::to_string(_port));
+    Optional<boost::asio::ip::tcp::endpoint> externalAddress = resolver.Resolve(boost::asio::ip::tcp::v4(), configuredAddress, std::to_string(_port));
     if (!externalAddress)
     {
         TC_LOG_ERROR("server.rest", "Could not resolve LoginREST.ExternalAddress %s", configuredAddress.c_str());
@@ -96,7 +96,7 @@ bool LoginRESTService::Start(Trinity::Asio::IoContext* ioContext)
     _externalAddress = *externalAddress;
 
     configuredAddress = sConfigMgr->GetStringDefault("LoginREST.LocalAddress", "127.0.0.1");
-    Optional<boost::asio::ip::tcp::endpoint> localAddress = Trinity::Net::Resolve(resolver, boost::asio::ip::tcp::v4(), configuredAddress, std::to_string(_port));
+    Optional<boost::asio::ip::tcp::endpoint> localAddress = resolver.Resolve(boost::asio::ip::tcp::v4(), configuredAddress, std::to_string(_port));
     if (!localAddress)
     {
         TC_LOG_ERROR("server.rest", "Could not resolve LoginREST.LocalAddress %s", configuredAddress.c_str());
