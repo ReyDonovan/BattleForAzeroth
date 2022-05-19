@@ -1,37 +1,47 @@
--- ----------------------------
--- Table structure for `achats`
--- ----------------------------
+/*
+SQLyog Community v13.1.9 (64 bit)
+MySQL - 5.7.37-log : Database - bfa_shop
+*********************************************************************
+*/
+
+/*!40101 SET NAMES utf8 */;
+
+/*!40101 SET SQL_MODE=''*/;
+
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+/*Table structure for table `achats` */
+
 DROP TABLE IF EXISTS `achats`;
+
 CREATE TABLE `achats` (
   `account_id` int(10) unsigned NOT NULL,
   `id` int(10) unsigned NOT NULL DEFAULT '0',
   PRIMARY KEY (`account_id`,`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
--- ----------------------------
--- Records of achats
--- ----------------------------
+/*Data for the table `achats` */
 
--- ----------------------------
--- Table structure for `battlepay_groups`
--- ----------------------------
+/*Table structure for table `battlepay_groups` */
+
 DROP TABLE IF EXISTS `battlepay_groups`;
+
 CREATE TABLE `battlepay_groups` (
   `id` int(10) DEFAULT NULL,
   `ordering` int(11) DEFAULT NULL,
   `name` varchar(60) DEFAULT NULL,
   `iconFileDataId` int(10) DEFAULT NULL,
   `displayType` tinyint(3) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
--- ----------------------------
--- Records of battlepay_groups
--- ----------------------------
+/*Data for the table `battlepay_groups` */
 
--- ----------------------------
--- Table structure for `battlepay_products`
--- ----------------------------
+/*Table structure for table `battlepay_products` */
+
 DROP TABLE IF EXISTS `battlepay_products`;
+
 CREATE TABLE `battlepay_products` (
   `id` int(10) DEFAULT NULL,
   `itemId` int(10) DEFAULT NULL,
@@ -51,30 +61,26 @@ CREATE TABLE `battlepay_products` (
   `logType` int(10) DEFAULT NULL,
   `name` varchar(210) DEFAULT NULL,
   `description` varchar(3000) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
--- ----------------------------
--- Records of battlepay_products
--- ----------------------------
+/*Data for the table `battlepay_products` */
 
--- ----------------------------
--- Table structure for `points`
--- ----------------------------
+/*Table structure for table `points` */
+
 DROP TABLE IF EXISTS `points`;
+
 CREATE TABLE `points` (
   `account_id` int(10) unsigned NOT NULL,
   `nbPoints` float(10,0) NOT NULL DEFAULT '0',
   PRIMARY KEY (`account_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
--- ----------------------------
--- Records of points
--- ----------------------------
+/*Data for the table `points` */
 
--- ----------------------------
--- Table structure for `updates`
--- ----------------------------
+/*Table structure for table `updates` */
+
 DROP TABLE IF EXISTS `updates`;
+
 CREATE TABLE `updates` (
   `name` varchar(200) NOT NULL COMMENT 'filename with extension of the update.',
   `hash` char(40) DEFAULT '' COMMENT 'sha1 hash of the sql file.',
@@ -84,22 +90,28 @@ CREATE TABLE `updates` (
   PRIMARY KEY (`name`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='List of all applied updates in this database.';
 
--- ----------------------------
--- Records of updates
--- ----------------------------
-INSERT INTO `updates` VALUES ('2018_12_10_01_battlepay.sql', 'E8EC68DAFFEC354F401F7F55377F03FD426D408F', 'RELEASED', '2019-02-15 19:45:46', '52');
+/*Data for the table `updates` */
 
--- ----------------------------
--- Table structure for `updates_include`
--- ----------------------------
+insert  into `updates`(`name`,`hash`,`state`,`timestamp`,`speed`) values 
+('2018_12_10_01_battlepay.sql','E8EC68DAFFEC354F401F7F55377F03FD426D408F','RELEASED','2019-02-15 19:45:46',52);
+
+/*Table structure for table `updates_include` */
+
 DROP TABLE IF EXISTS `updates_include`;
+
 CREATE TABLE `updates_include` (
   `path` varchar(200) NOT NULL COMMENT 'directory to include. $ means relative to the source directory.',
   `state` enum('RELEASED','ARCHIVED') NOT NULL DEFAULT 'RELEASED' COMMENT 'defines if the directory contains released or archived updates.',
   PRIMARY KEY (`path`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='List of directories where we want to include sql updates.';
 
--- ----------------------------
--- Records of updates_include
--- ----------------------------
-INSERT INTO `updates_include` VALUES ('$/sql/ashamane/shop', 'RELEASED');
+/*Data for the table `updates_include` */
+
+insert  into `updates_include`(`path`,`state`) values 
+('$/sql/ashamane/shop','RELEASED'),
+('$/sql/ashamane/old/shop','ARCHIVED');
+
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;

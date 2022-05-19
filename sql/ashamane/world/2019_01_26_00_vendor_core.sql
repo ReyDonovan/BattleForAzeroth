@@ -1,1 +1,0 @@
-ALTER TABLE `npc_vendor` ADD COLUMN `Context` TINYINT(3) UNSIGNED NOT NULL DEFAULT '0' AFTER `PlayerConditionID`;
