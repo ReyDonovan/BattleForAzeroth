@@ -599,7 +599,7 @@ struct npc_taelia_get_your_bearings : public FollowerAI
                                 justCompletedObjective = true;
                             }
 
-                    if (justCompletedObjective && player->GetQuestStatus(QUEST_GET_YOUR_BEARINGS) == QUEST_STATUS_COMPLETE)
+                    if (player->GetQuestStatus(QUEST_GET_YOUR_BEARINGS) == QUEST_STATUS_COMPLETE)
                     {
                         player->PlayConversation(9556);
                         me->SetFlag64(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_QUESTGIVER);
