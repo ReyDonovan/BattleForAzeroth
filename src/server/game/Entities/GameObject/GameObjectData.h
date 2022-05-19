@@ -752,6 +752,15 @@ struct GameObjectTemplate
         }
     }
 
+    uint32 GetDungeonEncounter() const
+    {
+        switch (type)
+        {
+            case GAMEOBJECT_TYPE_CHEST: return chest.DungeonEncounter;
+            default: return 0;
+        }
+    }
+
     bool GetDespawnPossibility() const                      // despawn at targeting of cast?
     {
         switch (type)

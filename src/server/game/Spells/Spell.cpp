@@ -3531,15 +3531,6 @@ void Spell::cast(bool skipCheck)
     if (Creature* caster = m_originalCaster->ToCreature())
         if (caster->IsAIEnabled)
             caster->AI()->OnSuccessfulSpellCast(GetSpellInfo());
-
-	if (m_caster && m_caster->HasAura(193640))
-    {
-        if (m_spellInfo->Id == 408 || m_spellInfo->Id == 1943 || m_spellInfo->Id == 2098 || m_spellInfo->Id == 26679 || m_spellInfo->Id == 32645 || m_spellInfo->Id == 121411 || m_spellInfo->Id == 152150)
-        {
-            m_caster->AddAura(193641, m_caster);
-        }
-
-    }
 }
 
 void Spell::handle_immediate()
@@ -7478,6 +7469,8 @@ SpellCastResult Spell::CanOpenLock(uint32 effIndex, uint32 lockId, SkillType& sk
 
                 return SPELL_CAST_OK;
             }
+            case LOCK_KEY_SPELL: // has a spellid which client will cast for opening
+                return SPELL_CAST_OK;
         }
     }
 

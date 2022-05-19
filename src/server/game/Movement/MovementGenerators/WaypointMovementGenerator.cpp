@@ -300,7 +300,7 @@ bool WaypointMovementGenerator<Creature>::DoUpdate(Creature* creature, uint32 di
 void WaypointMovementGenerator<Creature>::MovementInform(Creature* creature)
 {
     if (creature->AI())
-        creature->AddMovementInform(WAYPOINT_MOTION_TYPE, i_currentNode);
+        creature->AI()->MovementInform(WAYPOINT_MOTION_TYPE, i_currentNode);
 }
 
 bool WaypointMovementGenerator<Creature>::GetResetPos(Creature*, float& x, float& y, float& z)
@@ -426,9 +426,6 @@ void FlightPathMovementGenerator::DoReset(Player* player)
 
     for (uint32 i = i_currentNode; i != end; ++i)
     {
-        if (i >= i_path.size())
-            break;
-
         G3D::Vector3 vertice(i_path[i]->Loc.X, i_path[i]->Loc.Y, i_path[i]->Loc.Z);
         init.Path().push_back(vertice);
     }

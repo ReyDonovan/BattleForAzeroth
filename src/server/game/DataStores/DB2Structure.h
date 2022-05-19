@@ -921,9 +921,6 @@ struct CriteriaEntry
         // CRITERIA_TYPE_FISH_IN_GAMEOBJECT     = 72
         int32 GameObjectID;
 
-        //CRITERIA_TYPE_SEND_EVENT              = 73
-        uint32 EventID;
-
         //CRITERIA_TYPE_SEND_EVENT_SCENARIO     = 92
         uint32 ScenarioEventID;
 
@@ -2207,7 +2204,6 @@ struct MapEntry
     uint8 Expansion() const { return ExpansionID; }
 
     bool IsDungeon() const { return (InstanceType == MAP_INSTANCE || InstanceType == MAP_RAID || InstanceType == MAP_SCENARIO) && !IsGarrison() && !IsWorldPvPMap(); }
-    bool IsScenario() const { return (InstanceType == MAP_SCENARIO); }
     bool IsNonRaidDungeon() const { return InstanceType == MAP_INSTANCE; }
     bool Instanceable() const { return InstanceType == MAP_INSTANCE || InstanceType == MAP_RAID || InstanceType == MAP_BATTLEGROUND || InstanceType == MAP_ARENA || InstanceType == MAP_SCENARIO; }
     bool IsRaid() const { return InstanceType == MAP_RAID; }

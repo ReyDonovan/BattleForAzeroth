@@ -156,15 +156,6 @@ enum RogueSpells
     SPELL_ROGUE_WOUND_POISON                        = 8679,
     SPELL_ROGUE_HIDDEN_BLADES                       = 270070,
     SPELL_ROGUE_POSION_BOMB                         = 255546,
-	ROGUE_SPELL_INTERNAL_BLEEDING                   = 154953,
-    ROGUE_SPELL_INTERNAL_BLEEDING_AURA              = 154904,
-    ROGUE_SPELL_MARKED_FOR_DEATH                    = 137619,
-    ROUGE_SPELL_IRONWIRE_TALLENT                    = 196861,
-    ROGUE_SPELL_IRONWIRE_DAMAGE_REDUCE              = 256148,
-    ROUGE_SPELL_MASTER_ASSASSIN                     = 256735,
-    ROUGE_SPELL_MASTER_ASSASSIN_TALLENT             = 255989,
-    ROUGE_SPELL_NIGHTSTALKER_TALLENT                = 14062,
-    ROUGE_SPELL_NIGHTSTALKER_DAMAGE                 = 130493
 };
 
 enum RollTheBones
@@ -911,29 +902,6 @@ class spell_rog_stealth : public SpellScriptLoader
     public:
         spell_rog_stealth() : SpellScriptLoader("spell_rog_stealth") { }
 
-        class spell_rog_stealth_SpellScript : public SpellScript
-        {
-            PrepareSpellScript(spell_rog_stealth_SpellScript);
-
-
-            void HandleAfterHit()
-            {
-
-                if (!GetCaster())
-                    return;
-
-                if (GetCaster()->HasAura(ROUGE_SPELL_MASTER_ASSASSIN_TALLENT))
-                {
-                    GetCaster()->CastSpell(GetCaster(), ROUGE_SPELL_MASTER_ASSASSIN, true);
-                }
-            }
-
-            void Register()
-            {
-                AfterHit += SpellHitFn(spell_rog_stealth_SpellScript::HandleAfterHit);
-            }
-        };
-
         class spell_rog_stealth_AuraScript : public AuraScript
         {
             PrepareAuraScript(spell_rog_stealth_AuraScript);
@@ -954,12 +922,6 @@ class spell_rog_stealth : public SpellScriptLoader
 
             void HandleEffectApply(AuraEffect const* /*aurEff*/, AuraEffectHandleModes /*mode*/)
             {
-                if (!GetTarget())
-                    return;
-
-                if (!GetCaster())
-                    return;
-
                 Unit* target = GetTarget();
 
                 // Master of Subtlety
@@ -970,12 +932,17 @@ class spell_rog_stealth : public SpellScriptLoader
                 if (target->HasAura(SPELL_ROGUE_SHADOW_FOCUS))
                     target->CastSpell(target, SPELL_ROGUE_SHADOW_FOCUS_EFFECT, TRIGGERED_FULL_MASK);
 
+                target->RemoveAurasDueToSpell(SPELL_ROGUE_VANISH);
+                target->RemoveAurasDueToSpell(SPELL_ROGUE_VANISH_AURA);
+                target->RemoveAurasDueToSpell(SPELL_ROGUE_STEALTH_STEALTH_AURA);
+                target->RemoveAurasDueToSpell(SPELL_ROGUE_STEALTH_SHAPESHIFT_AURA);
+
                 target->CastSpell(target, SPELL_ROGUE_SANCTUARY, TRIGGERED_FULL_MASK);
                 target->CastSpell(target, SPELL_ROGUE_STEALTH_STEALTH_AURA, TRIGGERED_FULL_MASK);
                 target->CastSpell(target, SPELL_ROGUE_STEALTH_SHAPESHIFT_AURA, TRIGGERED_FULL_MASK);
 
-                if (GetCaster()->HasAura(ROUGE_SPELL_NIGHTSTALKER_TALLENT))
-                    GetCaster()->CastSpell(GetCaster(), ROUGE_SPELL_NIGHTSTALKER_DAMAGE, true);
+                if(target->HasAura(SPELL_ROGUE_MASTER_OF_SHADOWS))
+                    target->ModifyPower(POWER_ENERGY, +30);
             }
 
             void HandleEffectRemove(AuraEffect const* /*aurEff*/, AuraEffectHandleModes /*mode*/)
@@ -992,38 +959,24 @@ class spell_rog_stealth : public SpellScriptLoader
                     }
                 }
 
-                if (GetCaster()->HasAura(ROUGE_SPELL_MASTER_ASSASSIN))
-                {
-                    if (Aura* masterassassin = GetCaster()->GetAura(ROUGE_SPELL_MASTER_ASSASSIN))
-                    {
-                        masterassassin->SetDuration(3000);
-                    }
-                }
-
-                if (GetCaster()->HasAura(ROUGE_SPELL_NIGHTSTALKER_DAMAGE))
-                {
-                    if (Aura* masterassassin = GetCaster()->GetAura(ROUGE_SPELL_NIGHTSTALKER_DAMAGE))
-                    {
-                        masterassassin->SetDuration(150);
-                    }
-                }
-
                 target->RemoveAurasDueToSpell(SPELL_ROGUE_SHADOW_FOCUS_EFFECT);
                 target->RemoveAurasDueToSpell(SPELL_ROGUE_STEALTH_STEALTH_AURA);
                 target->RemoveAurasDueToSpell(SPELL_ROGUE_STEALTH_SHAPESHIFT_AURA);
+                if (target->HasAura(SPELL_ROGUE_SUBTERFUGE))
+                    target->CastSpell(target, SPELL_ROGUE_SUBTERFUGE_AURA, true);
+                if (Aura* aur = target->GetAura(SPELL_ROGUE_MASTER_OF_SUBTLETY_DAMAGE_PERCENT))
+                {
+                    aur->SetMaxDuration(6000);
+                    aur->SetDuration(6000);
+                }
             }
 
             void Register() override
             {
-                AfterEffectApply += AuraEffectApplyFn(spell_rog_stealth_AuraScript::HandleEffectApply, EFFECT_0, SPELL_AURA_DUMMY, AURA_EFFECT_HANDLE_REAL);
+                AfterEffectApply += AuraEffectApplyFn(spell_rog_stealth_AuraScript::HandleEffectApply, EFFECT_0, SPELL_AURA_DUMMY, AURA_EFFECT_HANDLE_REAL_OR_REAPPLY_MASK);
                 AfterEffectRemove += AuraEffectRemoveFn(spell_rog_stealth_AuraScript::HandleEffectRemove, EFFECT_0, SPELL_AURA_DUMMY, AURA_EFFECT_HANDLE_REAL);
             }
         };
-
-        SpellScript* GetSpellScript() const override
-        {
-            return new spell_rog_stealth_SpellScript();
-        }
 
         AuraScript* GetAuraScript() const override
         {
@@ -2073,6 +2026,103 @@ public:
     }
 };
 
+class spell_rog_garrote : public SpellScriptLoader
+{
+public:
+    spell_rog_garrote() : SpellScriptLoader("spell_rog_garrote") {}
+
+    class spell_rog_garrote_SpellScript : public SpellScript
+    {
+        PrepareSpellScript(spell_rog_garrote_SpellScript);
+
+    public:
+        spell_rog_garrote_SpellScript()
+        {
+            _stealthed = false;
+        }
+
+    private:
+
+        bool _stealthed;
+
+        bool Validate(SpellInfo const* /*spellInfo*/) override
+        {
+            return ValidateSpellInfo(
+            {
+                SPELL_ROGUE_GARROTE_DOT,
+                SPELL_ROGUE_GARROTE_SILENCE
+            });
+        }
+
+        bool Load() override
+        {
+            if (GetCaster()->HasAuraType(SPELL_AURA_MOD_STEALTH))
+                _stealthed = true;
+            return true;
+        }
+
+        void HandleOnHit()
+        {
+            Unit* caster = GetCaster();
+            Unit* target = GetExplTargetUnit();
+
+            if (_stealthed)
+            {
+                caster->CastSpell(target, SPELL_ROGUE_GARROTE_SILENCE, true);
+            }
+        }
+
+        void Register() override
+        {
+            OnHit += SpellHitFn(spell_rog_garrote_SpellScript::HandleOnHit);
+        }
+    };
+
+    class spell_rog_garrote_AuraScript : public AuraScript
+    {
+        PrepareAuraScript(spell_rog_garrote_AuraScript);
+
+        bool Validate(SpellInfo const* /*spellInfo*/) override
+        {
+            return ValidateSpellInfo(
+            {
+                SPELL_ROGUE_THUGGEE
+            });
+        }
+
+        void HandleRemove(AuraEffect const* /*aurEff*/, AuraEffectHandleModes /*mode*/)
+        {
+            if (GetTargetApplication()->GetRemoveMode() != AURA_REMOVE_BY_DEATH)
+                return;
+
+            Unit* caster = GetAura()->GetCaster();
+
+            if (!caster)
+                return;
+
+            if (!caster->HasAura(SPELL_ROGUE_THUGGEE))
+                return;
+
+            caster->GetSpellHistory()->ResetCooldown(SPELL_ROGUE_GARROTE_DOT, true);
+        }
+
+        void Register() override
+        {
+            AfterEffectRemove += AuraEffectRemoveFn(spell_rog_garrote_AuraScript::HandleRemove, EFFECT_0, SPELL_AURA_PERIODIC_DAMAGE, AURA_EFFECT_HANDLE_REAL);
+        }
+    };
+
+    SpellScript* GetSpellScript() const override
+    {
+        return new spell_rog_garrote_SpellScript();
+    }
+
+    AuraScript* GetAuraScript() const override
+    {
+        return new spell_rog_garrote_AuraScript();
+    }
+};
+
 // Saber slash - 193315
 class spell_rog_saber_slash : public SpellScript
 {
@@ -2824,258 +2874,6 @@ class spell_rog_dismantle : public AuraScript
     }
 };
 
-// 408 - Internal Bleeding
-class spell_rog_internal_bleeding : public SpellScriptLoader
-{
-public:
-    spell_rog_internal_bleeding() : SpellScriptLoader("spell_rog_internal_bleeding") { }
-
-    class spell_rog_internal_bleeding_SpellScript : public SpellScript
-    {
-        PrepareSpellScript(spell_rog_internal_bleeding_SpellScript);
-
-        void HandleOnHit()
-        {
-            if (!GetCaster())// check null
-                return;
-            if (!GetHitUnit())
-                return;
-
-                Unit* caster = GetCaster();
-                Unit* target = GetHitUnit();
-
-                if (!caster)
-                    return;
-
-                Player* owner = caster->GetSpellModOwner();
-
-                if (!target)
-                    return;
-
-
-                if (caster->HasAura(ROGUE_SPELL_INTERNAL_BLEEDING_AURA) || (owner && owner->HasAura(ROGUE_SPELL_INTERNAL_BLEEDING_AURA)))
-                    caster->CastSpell(target, ROGUE_SPELL_INTERNAL_BLEEDING, true);
-        }
-
-        void Register()
-        {
-            OnHit += SpellHitFn(spell_rog_internal_bleeding_SpellScript::HandleOnHit);
-        }
-    };
-
-    SpellScript* GetSpellScript() const
-    {
-        return new spell_rog_internal_bleeding_SpellScript();
-    }
-};
-
-// 154953 - Iternal Bleeding Damage
-class spell_rog_internal_bleeding_damage : public SpellScriptLoader
-{
-public:
-    spell_rog_internal_bleeding_damage() : SpellScriptLoader("spell_rog_internal_bleeding_damage") { }
-
-    class spell_rog_internal_bleeding_damage_SpellScript : public SpellScript
-    {
-        PrepareSpellScript(spell_rog_internal_bleeding_damage_SpellScript);
-
-        enum ashmaneSpells
-        {
-            InternalBleeding = 154953
-        };
-
-        uint8 m_NbComboPoint = 0;
-
-        void HandleOnHit()
-        {
-            if (!GetCaster()) // check null
-                return;
-            Unit* caster = GetCaster();
-            if (!caster)
-                return;
-            m_NbComboPoint = caster->GetPower(Powers::POWER_COMBO_POINTS);
-        }
-
-        void HandleAfterHit()
-        {
-            if (!GetCaster())
-                return;
-            if (!GetHitUnit()) // check null
-                return;
-                Unit* caster = GetCaster();
-                Unit* target = GetHitUnit();
-
-                if (!target)
-                    return;
-
-                if (!caster)
-                    return;
-
-                if (AuraEffect* l_AurEff = target->GetAuraEffect(ashmaneSpells::InternalBleeding, EFFECT_0, caster->GetGUID()))
-                    l_AurEff->SetAmount(l_AurEff->GetAmount() * m_NbComboPoint);
-        }
-
-        void Register()
-        {
-            OnHit += SpellHitFn(spell_rog_internal_bleeding_damage_SpellScript::HandleOnHit);
-            AfterHit += SpellHitFn(spell_rog_internal_bleeding_damage_SpellScript::HandleAfterHit);
-        }
-    };
-
-    SpellScript* GetSpellScript() const
-    {
-        return new spell_rog_internal_bleeding_damage_SpellScript();
-    }
-};
-
-// 137619 - Marked for Death
-class spell_rog_marked_for_death : public SpellScriptLoader
-{
-public:
-    spell_rog_marked_for_death() : SpellScriptLoader("spell_rog_marked_for_death") { }
-
-    class spell_rog_marked_for_death_AuraScript : public AuraScript
-    {
-        PrepareAuraScript(spell_rog_marked_for_death_AuraScript);
-
-        void OnRemove(AuraEffect const* /*aurEff*/, AuraEffectHandleModes /*mode*/)
-        {
-            if (!GetCaster())
-                return;
-
-            Player* plr = GetCaster()->ToPlayer();
-            if (!plr)
-                return;
-
-            if (!GetTargetApplication())
-                return;
-
-            if (!GetTargetApplication()->GetBase())
-                return;
-
-            if (!GetTarget())
-                return;
-
-            AuraRemoveMode removeMode = GetTargetApplication()->GetRemoveMode();
-            if (removeMode == AURA_REMOVE_BY_DEATH)
-            {
-                if (plr->GetSpellHistory()->HasCooldown(ROGUE_SPELL_MARKED_FOR_DEATH))
-                    plr->GetSpellHistory()->ResetCooldown(ROGUE_SPELL_MARKED_FOR_DEATH, true);
-
-                GetTarget()->RemoveAura(ROGUE_SPELL_MARKED_FOR_DEATH);
-            }
-        }
-
-        void Register()
-        {
-            OnEffectRemove += AuraEffectRemoveFn(spell_rog_marked_for_death_AuraScript::OnRemove, EFFECT_0, SPELL_AURA_PERIODIC_DUMMY, AURA_EFFECT_HANDLE_REAL);
-        }
-    };
-
-    AuraScript* GetAuraScript() const
-    {
-        return new spell_rog_marked_for_death_AuraScript();
-    }
-};
-
-// 703 - Garrote
-class spell_rog_garrote : public SpellScriptLoader
-{
-public:
-    spell_rog_garrote() : SpellScriptLoader("spell_rog_garrote") {}
-
-    class spell_rog_garrote_SpellScript : public SpellScript
-    {
-        PrepareSpellScript(spell_rog_garrote_SpellScript);
-
-    public:
-        spell_rog_garrote_SpellScript()
-        {
-            _stealthed = false;
-        }
-
-    private:
-
-        bool _stealthed;
-
-        bool Validate(SpellInfo const* /*spellInfo*/) override
-        {
-            return ValidateSpellInfo(
-            {
-                SPELL_ROGUE_GARROTE_DOT,
-                SPELL_ROGUE_GARROTE_SILENCE
-            });
-        }
-
-        bool Load() override
-        {
-            if (GetCaster()->HasAuraType(SPELL_AURA_MOD_STEALTH))
-                _stealthed = true;
-            return true;
-        }
-
-        void HandleOnHit()
-        {
-            Unit* caster = GetCaster();
-            Unit* target = GetExplTargetUnit();
-
-            if (_stealthed)
-            {
-                caster->CastSpell(target, SPELL_ROGUE_GARROTE_SILENCE, true);
-            }
-        }
-
-        void Register() override
-        {
-            OnHit += SpellHitFn(spell_rog_garrote_SpellScript::HandleOnHit);
-        }
-    };
-
-    class spell_rog_garrote_AuraScript : public AuraScript
-    {
-        PrepareAuraScript(spell_rog_garrote_AuraScript);
-
-        bool Validate(SpellInfo const* /*spellInfo*/) override
-        {
-            return ValidateSpellInfo(
-            {
-                SPELL_ROGUE_THUGGEE
-            });
-        }
-
-        void HandleRemove(AuraEffect const* /*aurEff*/, AuraEffectHandleModes /*mode*/)
-        {
-            if (GetTargetApplication()->GetRemoveMode() != AURA_REMOVE_BY_DEATH)
-                return;
-
-            Unit* caster = GetAura()->GetCaster();
-
-            if (!caster)
-                return;
-
-            if (!caster->HasAura(SPELL_ROGUE_THUGGEE))
-                return;
-
-            caster->GetSpellHistory()->ResetCooldown(SPELL_ROGUE_GARROTE_DOT, true);
-        }
-
-        void Register() override
-        {
-            AfterEffectRemove += AuraEffectRemoveFn(spell_rog_garrote_AuraScript::HandleRemove, EFFECT_0, SPELL_AURA_PERIODIC_DAMAGE, AURA_EFFECT_HANDLE_REAL);
-        }
-    };
-
-    SpellScript* GetSpellScript() const override
-    {
-        return new spell_rog_garrote_SpellScript();
-    }
-
-    AuraScript* GetAuraScript() const override
-    {
-        return new spell_rog_garrote_AuraScript();
-    }
-};
-
 void AddSC_rogue_spell_scripts()
 {
     ///AreaTriggerScript
@@ -3098,6 +2896,7 @@ void AddSC_rogue_spell_scripts()
     RegisterSpellScript(spell_rog_envenom);
     RegisterSpellScript(spell_rog_eviscerate);
     new spell_rog_fan_of_knives();
+    new spell_rog_garrote();
     new spell_rog_grappling_hook();
     new spell_rog_hemorrhage();
     RegisterSpellScript(spell_rog_kidney_shot);
@@ -3133,8 +2932,4 @@ void AddSC_rogue_spell_scripts()
     RegisterAuraScript(spell_rog_hidden_blades);
     RegisterAreaTriggerAI(at_rog_poison_bomb);
     RegisterAuraScript(spell_rog_cheap_shot);
-    new spell_rog_internal_bleeding();
-    new spell_rog_internal_bleeding_damage();
-    new spell_rog_marked_for_death();
-    new spell_rog_garrote();
 }

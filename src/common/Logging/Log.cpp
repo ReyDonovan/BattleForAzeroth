@@ -346,12 +346,6 @@ void Log::Close()
 
 bool Log::ShouldLog(std::string const& type, LogLevel level) const
 {
-    if (sConfigMgr->GetBoolDefault("OutLog", false))
-    {
-        if (level != LOG_LEVEL_INFO)
-            return false;
-    }
-
     // TODO: Use cache to store "Type.sub1.sub2": "Type" equivalence, should
     // Speed up in cases where requesting "Type.sub1.sub2" but only configured
     // Logger "Type"

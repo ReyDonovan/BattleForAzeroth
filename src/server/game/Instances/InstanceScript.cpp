@@ -47,17 +47,6 @@
 #include <sstream>
 #include <cstdarg>
 #include "SpellMgr.h"
-#include "ScenarioMgr.h"
-
-#include "GridNotifiers.h"
-#include "CellImpl.h"
-#include "ScriptedCreature.h"
-
-inline uint32 secsToTimeBitFields(time_t secs)
-{
-    tm* lt = localtime(&secs);
-    return uint32((lt->tm_year - 100) << 24 | lt->tm_mon << 20 | (lt->tm_mday - 1) << 14 | lt->tm_wday << 11 | lt->tm_hour << 6 | lt->tm_min);
-}
 
 BossBoundaryData::~BossBoundaryData()
 {
@@ -178,7 +167,6 @@ void InstanceScript::OnPlayerEnter(Player* player)
 
         CastChallengePlayerSpell(player);
     }
-    SpawnFontOfPower();
 }
 
 void InstanceScript::OnPlayerExit(Player* player)
@@ -873,16 +861,6 @@ void InstanceScript::DoNearTeleportPlayers(const Position pos, bool casting /*=f
                 pPlayer->NearTeleportTo(pos.GetPositionX(), pos.GetPositionY(), pos.GetPositionZ(), pos.GetOrientation(), casting);
 }
 
-void InstanceScript::DoTeleportPlayers(uint32 mapId, const Position pos)
-{
-    Map::PlayerList const &plrList = instance->GetPlayers();
-
-    if (!plrList.isEmpty())
-        for (Map::PlayerList::const_iterator i = plrList.begin(); i != plrList.end(); ++i)
-            if (Player* pPlayer = i->GetSource())
-                pPlayer->TeleportTo(mapId, pos.GetPositionX(), pos.GetPositionY(), pos.GetPositionZ(), pos.GetOrientation());
-}
-
 void InstanceScript::DoKilledMonsterKredit(uint32 questId, uint32 entry, ObjectGuid guid/* =0*/)
 {
     Map::PlayerList const &plrList = instance->GetPlayers();
@@ -1295,8 +1273,6 @@ void InstanceScript::StartChallengeMode(uint8 level)
     if (_challengeModeDoorPosition.is_initialized())
         instance->SummonGameObject(GOB_CHALLENGER_DOOR, *_challengeModeDoorPosition, QuaternionData(), WEEK);
 
-    ShowChallengeDoor();
-
     WorldPackets::ChallengeMode::ChangePlayerDifficultyResult changePlayerDifficultyResult(11);
     changePlayerDifficultyResult.InstanceDifficultyID = instance->GetId();
     changePlayerDifficultyResult.DifficultyRecID = DIFFICULTY_MYTHIC_KEYSTONE;
@@ -1324,8 +1300,6 @@ void InstanceScript::StartChallengeMode(uint8 level)
 
         if (GameObject* door = GetGameObject(GOB_CHALLENGER_DOOR))
             DoUseDoorOrButton(door->GetGUID(), WEEK);
-
-        HideChallengeDoor();
     });
 }
 
@@ -1434,8 +1408,7 @@ void InstanceScript::CastChallengeCreatureSpell(Creature* creature)
     values.AddSpellMod(SPELLVALUE_BASE_POINT1, sChallengeModeMgr->GetDamageMultiplier(_challengeModeLevel));
 
     // Affixes
-
-	values.AddSpellMod(SPELLVALUE_BASE_POINT2,  0); // 6 Raging
+    values.AddSpellMod(SPELLVALUE_BASE_POINT2,  0); // 6 Raging
     values.AddSpellMod(SPELLVALUE_BASE_POINT3,  0); // 7 Bolstering
     values.AddSpellMod(SPELLVALUE_BASE_POINT4,  0); // 9 Tyrannical
     values.AddSpellMod(SPELLVALUE_BASE_POINT5,  0); //
@@ -1461,14 +1434,6 @@ void InstanceScript::CastChallengePlayerSpell(Player* player)
     values.AddSpellMod(SPELLVALUE_BASE_POINT3,  0); //
 
     player->CastCustomSpell(SPELL_CHALLENGER_BURDEN, values, player, TRIGGERED_FULL_MASK);
-}
-
-void InstanceScript::SpawnFontOfPower()
-{   
-    if (_challengeModeFontOfPowerPosition.is_initialized() && instance->IsMythic())
-        instance->SummonGameObject(GO_FONT_OF_POWER, *_challengeModeFontOfPowerPosition, QuaternionData(), WEEK);
-    if (_challengeModeFontOfPowerPosition2.is_initialized() && instance->IsMythic())
-        instance->SummonGameObject(GO_FONT_OF_POWER, *_challengeModeFontOfPowerPosition2, QuaternionData(), WEEK);
 }
 
 bool InstanceHasScript(WorldObject const* obj, char const* scriptName)

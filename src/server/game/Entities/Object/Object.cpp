@@ -1603,7 +1603,7 @@ void WorldObject::setActive(bool on)
 
     m_isActive = on;
 
-    if (on && !IsInWorld())
+    if (!IsInWorld())
         return;
 
     Map* map = FindMap();

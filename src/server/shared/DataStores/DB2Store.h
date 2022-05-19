@@ -49,9 +49,6 @@ public:
     virtual void LoadFromDB() = 0;
     virtual void LoadStringsFromDB(uint32 locale) = 0;
 
-    uint32 BeginEntry = 0;
-    uint32 EndEntry = 0;
-
 protected:
     void WriteRecordData(char const* entry, uint32 locale, ByteBuffer& buffer) const;
     bool Load(std::string const& path, uint32 locale, char**& indexTable);

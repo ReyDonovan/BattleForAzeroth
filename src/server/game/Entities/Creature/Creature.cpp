@@ -755,14 +755,6 @@ void Creature::Update(uint32 diff)
         else stopTimer -= diff;
     }
 
-    for (auto MovementInformInfo : m_MovementInform)
-    {
-        if (CreatureAI* ZGN_AI = AI())
-            ZGN_AI->MovementInform(MovementInformInfo.first, MovementInformInfo.second);
-    }
-
-    m_MovementInform.clear();
-
     sScriptMgr->OnCreatureUpdate(this, diff);
 }
 

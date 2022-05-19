@@ -318,13 +318,6 @@ namespace GarrisonMission
         Normal  = 0,
         Bonus   = 1,
     };
-
-    enum MissionRewardType
-    {
-        Item     = 0,
-        Currency = 1,
-        Gold     = 2,
-    };
 }
 
 #endif

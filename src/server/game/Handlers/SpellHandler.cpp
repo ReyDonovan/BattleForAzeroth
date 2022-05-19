@@ -276,8 +276,34 @@ void WorldSession::HandleCastSpellOpcode(WorldPackets::Spells::CastSpell& cast)
         caster = _player;
     }
 
+    // client provided targets
+    SpellCastTargets targets(caster, cast.Cast);
+
+    bool ignoreGoCast = false;
+    if (GameObject* goTarget = targets.GetGOTarget())
+    {
+        if (GameObjectTemplate const* goInfo = goTarget->GetGOInfo())
+        {
+            if (LockEntry const* lockInfo = sLockStore.LookupEntry(goInfo->GetLockId()))
+            {
+                for (int i = 0; i < MAX_LOCK_CASE; ++i)
+                {
+                    if (lockInfo->Type[i] == LOCK_KEY_SPELL)
+                    {
+                        if (lockInfo->Index[i] == spellInfo->Id)
+                        {
+                            ignoreGoCast = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     // check known spell or raid marker spell (which not requires player to know it) ignore 200749 Activating Specialization (Demon hunter spell)
-    if (caster->GetTypeId() == TYPEID_PLAYER && spellInfo->Id != 200749 && !caster->ToPlayer()->HasActiveSpell(spellInfo->Id) && !spellInfo->HasEffect(SPELL_EFFECT_CHANGE_RAID_MARKER) && !spellInfo->HasAttribute(SPELL_ATTR8_RAID_MARKER))
+    if (!ignoreGoCast && caster->GetTypeId() == TYPEID_PLAYER && spellInfo->Id != 200749 && !caster->ToPlayer()->HasActiveSpell(spellInfo->Id) && !spellInfo->HasEffect(SPELL_EFFECT_CHANGE_RAID_MARKER) && !spellInfo->HasAttribute(SPELL_ATTR8_RAID_MARKER))
+        return;
 
     // Check possible spell cast overrides
     spellInfo = caster->GetCastSpellInfo(spellInfo);
@@ -291,9 +317,6 @@ void WorldSession::HandleCastSpellOpcode(WorldPackets::Spells::CastSpell& cast)
     // can't use our own spells when we're in possession of another unit,
     if (_player->isPossessing())
         return;
-
-    // client provided targets
-    SpellCastTargets targets(caster, cast.Cast);
 
     // auto-selection buff level base at target level (in spellInfo)
     if (targets.GetUnitTarget())

@@ -330,7 +330,7 @@ SeatMap::const_iterator Vehicle::GetNextEmptySeat(int8 seatId, bool next) const
     if (seat == Seats.end())
         return seat;
 
-    while (!seat->second.IsEmpty() || HasPendingEventForSeat(seat->first) || (!seat->second.SeatInfo->CanEnterOrExit() && !seat->second.SeatInfo->IsUsableByOverride()))
+    while (!seat->second.IsEmpty() || (!seat->second.SeatInfo->CanEnterOrExit() && !seat->second.SeatInfo->IsUsableByOverride()))
     {
         if (next)
         {
@@ -444,7 +444,7 @@ bool Vehicle::AddPassenger(Unit* unit, int8 seatId)
     if (seatId < 0) // no specific seat requirement
     {
         for (seat = Seats.begin(); seat != Seats.end(); ++seat)
-            if (seat->second.IsEmpty() && !HasPendingEventForSeat(seat->first) && (seat->second.SeatInfo->CanEnterOrExit() || seat->second.SeatInfo->IsUsableByOverride()))
+            if (seat->second.IsEmpty() && (seat->second.SeatInfo->CanEnterOrExit() || seat->second.SeatInfo->IsUsableByOverride()))
                 break;
 
         if (seat == Seats.end()) // no available seat
@@ -681,7 +681,7 @@ uint8 Vehicle::GetAvailableSeatCount() const
     uint8 ret = 0;
     SeatMap::const_iterator itr;
     for (itr = Seats.begin(); itr != Seats.end(); ++itr)
-        if (itr->second.IsEmpty() && !HasPendingEventForSeat(itr->first) && (itr->second.SeatInfo->CanEnterOrExit() || itr->second.SeatInfo->IsUsableByOverride()))
+        if (itr->second.IsEmpty() && (itr->second.SeatInfo->CanEnterOrExit() || itr->second.SeatInfo->IsUsableByOverride()))
             ++ret;
 
     return ret;
@@ -787,15 +787,6 @@ bool VehicleJoinEvent::Execute(uint64, uint32)
 
     Target->RemovePendingEventsForSeat(Seat->first);
     Target->RemovePendingEventsForPassenger(Passenger);
-
-    if (!Passenger->IsAlive())
-    {
-        Abort(0);
-        return true;
-    }
-
-    if (Passenger->GetVehicle())
-        Passenger->ExitVehicle();
 
     Passenger->SetVehicle(Target);
     Seat->second.Passenger.Guid = Passenger->GetGUID();
@@ -912,14 +903,4 @@ void VehicleJoinEvent::Abort(uint64)
 
     if (Passenger->IsInWorld() && Passenger->HasUnitTypeMask(UNIT_MASK_ACCESSORY))
         Passenger->ToCreature()->DespawnOrUnsummon();
-}
-
-bool Vehicle::HasPendingEventForSeat(int8 seatId) const
-{
-    for (PendingJoinEventContainer::const_iterator itr = _pendingJoinEvents.begin(); itr != _pendingJoinEvents.end(); ++itr)
-    {
-        if ((*itr)->Seat->first == seatId)
-            return true;
-    }
-    return false;
 }

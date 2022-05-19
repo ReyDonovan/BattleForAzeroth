@@ -21,10 +21,10 @@
 #include "CreatureAI.h"
 #include "MoveSplineInit.h"
 #include "MoveSpline.h"
-#include "Vehicle.h"
 
 void HomeMovementGenerator<Creature>::DoInitialize(Creature* owner)
 {
+    owner->AddUnitState(UNIT_STATE_EVADE);
     _setTargetLocation(owner);
 }
 
@@ -35,8 +35,6 @@ void HomeMovementGenerator<Creature>::DoFinalize(Creature* owner)
         owner->ClearUnitState(UNIT_STATE_EVADE);
         owner->SetWalk(true);
         owner->LoadCreaturesAddon();
-        if (owner->IsVehicle())
-            owner->GetVehicleKit()->Reset(true);
         owner->AI()->JustReachedHome();
         owner->SetSpawnHealth();
     }

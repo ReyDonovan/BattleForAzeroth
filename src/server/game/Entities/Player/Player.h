@@ -2535,52 +2535,6 @@ class TC_GAME_API Player : public Unit, public GridObject<Player>
         void SendCustomMessage(std::string const& opcode, std::string const& data = "");
         void SendCustomMessage(std::string const& opcode, std::vector<std::string> const& data);
 
-        /* delay teleport */
-        void AddDelayedTeleport(uint32 delay, uint32 mapID, float x, float y, float z, float o)
-        {
-            WorldLocation loc;
-            loc = WorldLocation(mapID);
-            loc.Relocate(x, y, z, o);
-
-            this->GetScheduler().Schedule(Milliseconds(delay), [loc](TaskContext context)
-            {
-                if (Player* player = GetContextPlayer())
-                {
-                    if (loc.GetMapId() == player->GetMapId())
-                        player->NearTeleportTo(loc, false);
-                    else
-                        player->TeleportTo(loc);
-                }
-            });
-
-        }
-        void AddDelayedTeleport(uint32 delay, uint32 mapID, Position pos)
-        {
-            AddDelayedTeleport(delay, mapID, pos.GetPositionX(), pos.GetPositionY(), pos.GetPositionZ(), pos.GetOrientation());
-        }
-
-        /*conversation delay teleport */
-        void AddConversationDelayedTeleport(uint32 delay, uint32 conversationId, uint32 mapID, float x, float y, float z, float o)
-        {
-            PlayConversation(conversationId);
-            AddDelayedTeleport(delay, mapID, x, y, z, o);
-        }
-        void AddConversationDelayedTeleport(uint32 delay, uint32 conversationId, uint32 mapID, Position pos)
-        {
-            AddConversationDelayedTeleport(delay, conversationId, mapID, pos.GetPositionX(), pos.GetPositionY(), pos.GetPositionZ(), pos.GetOrientation());
-        }
-
-        void AddDelayedConversation(uint32 delay, uint32 conversationId)
-        {
-            this->GetScheduler().Schedule(Milliseconds(delay), [conversationId](TaskContext context)
-            {
-                if (Player* player = GetContextPlayer())
-                {
-                    player->PlayConversation(conversationId);
-                }
-            });
-        }
-
         void PlayConversation(uint32 conversationId);
 
         void StartBreathTimer();

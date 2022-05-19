@@ -203,12 +203,15 @@ void CreatureAI::EnterEvadeMode(EvadeReason why)
         {
             // Required to prevent attacking creatures that are evading and cause them to reenter combat
             // Does not apply to MoveFollow
-            me->AddUnitState(UNIT_STATE_EVADE);
+            //me->AddUnitState(UNIT_STATE_EVADE);
             me->GetMotionMaster()->MoveTargetedHome();
         }
     }
 
     Reset();
+
+    if (me->IsVehicle()) // use the same sequence of addtoworld, aireset may remove all summons!
+        me->GetVehicleKit()->Reset(true);
 }
 
 /*void CreatureAI::AttackedBy(Unit* attacker)

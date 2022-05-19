@@ -361,11 +361,6 @@ class TC_GAME_API Creature : public Unit, public GridObject<Creature>, public Ma
         void ReenableHealthRegen() { m_disableHealthRegen = false; }
         bool HealthRegenDisabled() const { return m_disableHealthRegen; }
 
-        void AddMovementInform(uint32 type, uint32 id)
-        {
-            m_MovementInform.push_back(std::make_pair(type, id));
-        }
-
     protected:
         bool CreateFromProto(ObjectGuid::LowType guidlow, uint32 entry, CreatureData const* data = nullptr, uint32 vehId = 0);
         bool InitEntry(uint32 entry, CreatureData const* data = nullptr);
@@ -431,8 +426,6 @@ class TC_GAME_API Creature : public Unit, public GridObject<Creature>, public Ma
         //Formation var
         CreatureGroup* m_formation;
         bool m_TriggerJustRespawned;
-
-        std::list<std::pair<uint32, uint32>> m_MovementInform;
 
         /* Spell focus system */
         Spell const* m_focusSpell;   // Locks the target during spell cast for proper facing

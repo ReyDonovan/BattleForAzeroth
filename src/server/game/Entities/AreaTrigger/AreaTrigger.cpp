@@ -733,23 +733,40 @@ void AreaTrigger::InitSplineOffsets(std::vector<Position> const& offsets, uint32
 {
     float angleSin = std::sin(GetOrientation());
     float angleCos = std::cos(GetOrientation());
+    float x, y, z;
 
-    // This is needed to rotate the spline, following caster orientation
-    std::vector<G3D::Vector3> rotatedPoints;
-    rotatedPoints.reserve(offsets.size());
-    for (Position const& offset : offsets)
+    if (GetTemplate()->HasFlag(AREATRIGGER_FLAG_HAS_FOLLOWS_TERRAIN))
     {
-        float x = GetPositionX() + (offset.GetPositionX() * angleCos - offset.GetPositionY() * angleSin);
-        float y = GetPositionY() + (offset.GetPositionY() * angleCos + offset.GetPositionX() * angleSin);
-        float z = GetPositionZ();
-
+        Position dest = offsets.back();
+        x = GetPositionX() + (dest.GetPositionX() * angleCos - dest.GetPositionY() * angleSin);
+        y = GetPositionY() + (dest.GetPositionY() * angleCos + dest.GetPositionX() * angleSin);
+        z = GetPositionZ();
         UpdateAllowedPositionZ(x, y, z);
-        z += offset.GetPositionZ();
+        z += dest.GetPositionZ();
+        dest = GetPosition();
+        MovePositionToFirstCollision(dest, GetDistance(x, y, z), 0.0f);
 
-        rotatedPoints.emplace_back(x, y, z);
+        SetDestination(dest, timeToTarget);
     }
+    else
+    {
+        // This is needed to rotate the spline, following caster orientation
+        std::vector<G3D::Vector3> rotatedPoints;
+        rotatedPoints.reserve(offsets.size());
+        for (Position const& offset : offsets)
+        {
+            x = GetPositionX() + (offset.GetPositionX() * angleCos - offset.GetPositionY() * angleSin);
+            y = GetPositionY() + (offset.GetPositionY() * angleCos + offset.GetPositionX() * angleSin);
+            z = GetPositionZ();
 
-    InitSplines(std::move(rotatedPoints), timeToTarget);
+            UpdateAllowedPositionZ(x, y, z);
+            z += offset.GetPositionZ();
+
+            rotatedPoints.emplace_back(x, y, z);
+        }
+
+        InitSplines(std::move(rotatedPoints), timeToTarget);
+    }
 }
 
 void AreaTrigger::InitSplines(std::vector<G3D::Vector3> splinePoints, uint32 timeToTarget)

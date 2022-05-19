@@ -2608,34 +2608,6 @@ void Item::GiveArtifactXp(uint64 amount, Item* sourceItem, uint32 artifactCatego
     SetState(ITEM_CHANGED, owner);
 }
 
-void Item::ActivateFishArtifact(uint8 /*artifactId*/)
-{
-    Player* owner = GetOwner();
-    if (!owner)
-        return;
-
-    if (auto counterPower = const_cast<ItemDynamicFieldArtifactPowers*>(GetArtifactPower(1031)))
-    {
-        if (counterPower->PurchasedRank)
-            return;
-
-        ItemDynamicFieldArtifactPowers newPower = *counterPower;
-        ++newPower.PurchasedRank;
-        SetArtifactPower(&newPower);
-    }
-
-    if (auto* mainPowers = const_cast<ItemDynamicFieldArtifactPowers*>(GetArtifactPower(1021)))
-    {
-        ItemDynamicFieldArtifactPowers newPower = *mainPowers;
-        ++newPower.PurchasedRank;
-        ++newPower.CurrentRankWithBonus;
-        SetArtifactPower(&newPower);
-    }
-
-    SetUInt64Value(ITEM_FIELD_ARTIFACT_XP, GetUInt64Value(ITEM_FIELD_ARTIFACT_XP) - 100);
-    SetState(ITEM_CHANGED, owner);
-}
-
 void Item::SetFixedLevel(uint8 level)
 {
     if (!_bonusData.HasFixedLevel || GetModifier(ITEM_MODIFIER_SCALING_STAT_DISTRIBUTION_FIXED_LEVEL))

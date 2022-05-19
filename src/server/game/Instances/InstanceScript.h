@@ -99,8 +99,6 @@ enum DoorType
 enum ChallengeMode
 {
     GOB_CHALLENGER_DOOR     = 239408,
-    GOB_CHALLENGER_DOOR_LINE235 = 239323,
-    GO_FONT_OF_POWER        = 246779,
 
     SPELL_CHALLENGER_MIGHT  = 206150,
     SPELL_CHALLENGER_BURDEN = 206151
@@ -276,8 +274,6 @@ class TC_GAME_API InstanceScript : public ZoneScript
 
         void DoNearTeleportPlayers(const Position pos, bool casting = false);
 
-        void DoTeleportPlayers(uint32 mapId, const Position pos);
-
         void DoKilledMonsterKredit(uint32 questId, uint32 entry, ObjectGuid guid = ObjectGuid::Empty);
 
         // Complete Achievement for all players in instance
@@ -396,16 +392,6 @@ class TC_GAME_API InstanceScript : public ZoneScript
 
         void SetChallengeDoorPos(Position pos) { _challengeModeDoorPosition = pos; }
         virtual void SpawnChallengeModeRewardChest() { }
-		
-		void SetFontOfPowerPos(Position pos) { _challengeModeFontOfPowerPosition = pos; }
-        void SetFontOfPowerPos2(Position pos) { _challengeModeFontOfPowerPosition2 = pos; }
-        void SpawnFontOfPower();
-
-        virtual void ShowChallengeDoor() { }
-        virtual void HideChallengeDoor() { }
-
-        void SetCheckPointPos(Position pos) { _checkPointPosition = pos; }
-        Optional<Position> GetCheckPoint() { return _checkPointPosition; }
 
     protected:
         void SetHeaders(std::string const& dataHeaders);
@@ -464,9 +450,6 @@ class TC_GAME_API InstanceScript : public ZoneScript
         uint32 _challengeModeStartTime;
         uint32 _challengeModeDeathCount;
         Optional<Position> _challengeModeDoorPosition;
-        Optional<Position> _challengeModeFontOfPowerPosition;
-        Optional<Position> _challengeModeFontOfPowerPosition2;
-        Optional<Position> _checkPointPosition;
 
     #ifdef TRINITY_API_USE_DYNAMIC_LINKING
         // Strong reference to the associated script module

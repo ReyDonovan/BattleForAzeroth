@@ -144,24 +144,6 @@ void DB2StorageBase::LoadFromDB(char**& indexTable)
     _dataTableEx = DB2DatabaseLoader(_fileName, _loadInfo).Load(_indexTableSize, indexTable, extraStringHolders, _stringPool);
     if (extraStringHolders)
         _stringPool.push_back(extraStringHolders);
-
-    uint32 type = 0;
-    if (_fileName == "ItemSparse.db2")
-        type = 1;
-    else if (_fileName == "Item.db2")
-        type = 2;
-    else if (_fileName == "ItemEffect.db2")
-        type = 3;
-    else if (_fileName == "ItemModifiedAppearance.db2")
-        type = 4;
-
-    if (type)
-    {
-        BeginEntry = _indexTableSize;
-        _dataTableEx = DB2DatabaseLoader(_fileName, _loadInfo).LoadW(_indexTableSize, indexTable, type, EndEntry, extraStringHolders, _stringPool);
-        if (extraStringHolders)
-            _stringPool.push_back(extraStringHolders);
-    }
 }
 
 void DB2StorageBase::LoadStringsFromDB(uint32 locale, char** indexTable)

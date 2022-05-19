@@ -285,6 +285,7 @@ struct TC_GAME_API Loot
     LootItem* LootItemInSlot(uint32 lootslot, Player* player);
     uint32 GetMaxSlotInLootFor(Player* player) const;
     uint8 GetItemContext() const { return _itemContext; }
+    void GenerateItemContext(Unit const* contextUnit);
     bool hasItemForAll() const;
     bool hasItemFor(Player* player) const;
 

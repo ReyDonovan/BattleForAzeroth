@@ -47,10 +47,6 @@ EndContentData */
 #include "ScriptedCreature.h"
 #include "ScriptedGossip.h"
 #include "TemporarySummon.h"
-#include "Conversation.h"
-#include "Log.h"
-#include "Util.h"
-#include "PhasingHandler.h"
 
 /*#####
 # Quest: A Pawn on the Eternal Board
@@ -1377,51 +1373,16 @@ class go_wind_stone : public GameObjectScript
 };
 
 // 130216 - Magni Bronzebeard
-enum MagniBronzebeard
-{
-    CONVERSATION_A_THE_SPEAKERS_PERSPECTIVE      = 6617,
-    KILLMONSTERCREDIT_A_THE_SPEAKERS_PERSPECTIVE = 130216,
-    QUEST_H_THE_SPEAKERS_PERSPECTIVE             = 50055,
-    QUEST_A_THE_SPEAKERS_PERSPECTIVE             = 50049,
-    QUEST_A_DYING_WORLD_A                        = 50364,
-    QUEST_A_DYING_WORLD_H                        = 53028
-};
-
 struct npc_magni_bronzebeard_silithus : public ScriptedAI
 {
-    npc_magni_bronzebeard_silithus(Creature* creature) : ScriptedAI(creature) { m_playerGUID = ObjectGuid::Empty; }
-
-    void AddPlayer()
-    {
-        if (!HasPlayer(m_playerGUID))
-            pList.insert(m_playerGUID);
-    }
-
-    bool HasPlayer(ObjectGuid guid)
-    {
-        return (pList.find(guid) != pList.end());
-    }
+    npc_magni_bronzebeard_silithus(Creature* creature) : ScriptedAI(creature) { }
 
     void MoveInLineOfSight(Unit* unit) override
     {
         if (Player* player = unit->ToPlayer())
             if (player->GetDistance(me) < 20.0f)
-            {
-                player->KilledMonsterCredit(KILLMONSTERCREDIT_A_THE_SPEAKERS_PERSPECTIVE);
-                if (player->HasQuest(QUEST_A_THE_SPEAKERS_PERSPECTIVE) || player->HasQuest(QUEST_H_THE_SPEAKERS_PERSPECTIVE))
-                {
-                    m_playerGUID = player->GetGUID();
-                    AddPlayer();
-                    player->PlayConversation(CONVERSATION_A_THE_SPEAKERS_PERSPECTIVE);
-                    m_playerGUID = ObjectGuid::Empty;
-                }
-				else if (player->HasQuest(QUEST_A_DYING_WORLD_A) || player->HasQuest(QUEST_A_DYING_WORLD_H))
-                        player->KilledMonsterCredit(me->GetEntry());
-            }              
-    }       
-private:
-    std::set<ObjectGuid> pList;
-    ObjectGuid   m_playerGUID;
+                player->KilledMonsterCredit(me->GetEntry());
+    }
 };
 
 // 136907 - Magni Bronzebeard

@@ -626,7 +626,7 @@ void WorldQuestMgr::AddEmissaryQuestsOnPlayerIfNeeded(Player* player)
                 if (Quest const* quest = worldQuestTemplate->GetQuest())
                     if (quest->IsEmissaryQuest())
                         if (player->GetQuestStatus(itr.first) == QUEST_STATUS_NONE)
-                            player->AddQuestAndCheckCompletion(quest, nullptr);
+                            player->AddQuest(quest, nullptr);
     }
 }
 

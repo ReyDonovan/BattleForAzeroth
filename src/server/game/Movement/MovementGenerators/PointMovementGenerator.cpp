@@ -112,7 +112,7 @@ void PointMovementGenerator<T>::MovementInform(T* /*unit*/) { }
 template <> void PointMovementGenerator<Creature>::MovementInform(Creature* unit)
 {
     if (unit->AI())
-        unit->AddMovementInform(POINT_MOTION_TYPE, id);
+        unit->AI()->MovementInform(POINT_MOTION_TYPE, id);
 }
 
 template void PointMovementGenerator<Player>::DoInitialize(Player*);
@@ -161,5 +161,5 @@ void EffectMovementGenerator::Finalize(Unit* unit)
     }
 
     if (unit->ToCreature()->AI())
-        unit->ToCreature()->AddMovementInform(EFFECT_MOTION_TYPE, _id);
+        unit->ToCreature()->AI()->MovementInform(EFFECT_MOTION_TYPE, _id);
 }

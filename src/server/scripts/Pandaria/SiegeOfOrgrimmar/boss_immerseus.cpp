@@ -30,8 +30,6 @@ enum Spells
     SPELL_SWIRL_SCRIPT          = 143415,
 
     SPELL_SHA_CORRUPTION        = 143579,
-    
-    SPELL_SWELLING_CORRUTION    = 143574,
 
     SPELL_SPLIT                 = 143020,
     SPELL_SPLIT_MISSILE_1       = 143022, // sha puddle

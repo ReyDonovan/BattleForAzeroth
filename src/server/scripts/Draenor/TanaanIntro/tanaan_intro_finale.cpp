@@ -567,7 +567,7 @@ public:
     {
         if (quest->GetQuestId() == TanaanQuests::QuestATasteOfIron)
         {
-            // On enl?e Thaelin avant le d?ut de la cin?atique, pour qu'il revienne correctement apr? cot?client
+            // On enlève Thaelin avant le début de la cinématique, pour qu'il revienne correctement après coté client
             player->RemoveAurasDueToSpell(TanaanPhases::PhaseFinalThaelinCanon);
 
             player->GetSceneMgr().PlaySceneByPackageId(TanaanSceneObjects::SceneShootingGallery, SCENEFLAG_NOT_CANCELABLE | SCENEFLAG_UNK16);

@@ -2436,11 +2436,6 @@ void ScriptMgr::OnSceneComplete(Player* player, uint32 sceneInstanceId)
     FOREACH_SCRIPT(PlayerScript)->OnSceneComplete(player, sceneInstanceId);
 }
 
-void ScriptMgr::OnPlayerRepop(Player* player)
-{
-    FOREACH_SCRIPT(PlayerScript)->OnPlayerRepop(player);
-}
-
 void ScriptMgr::OnMovieComplete(Player* player, uint32 movieId)
 {
     FOREACH_SCRIPT(PlayerScript)->OnMovieComplete(player, movieId);

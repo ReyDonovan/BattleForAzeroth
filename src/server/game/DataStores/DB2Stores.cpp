@@ -1370,24 +1370,6 @@ DB2StorageBase const* DB2Manager::GetStorage(uint32 type) const
 
 void DB2Manager::LoadHotfixData()
 {
-    uint32 Hash = sItemEffectStore.GetTableHash();
-    for (uint32 entry = sItemEffectStore.BeginEntry; entry < sItemEffectStore.EndEntry; entry++)
-        InsertNewHotfix(Hash, entry);
-
-    Hash = sItemModifiedAppearanceStore.GetTableHash();
-    for (uint32 entry = sItemModifiedAppearanceStore.BeginEntry; entry < sItemModifiedAppearanceStore.EndEntry; entry++)
-        InsertNewHotfix(Hash, entry);
-
-    Hash = sItemStore.GetTableHash();
-    QueryResult res = WorldDatabase.Query("select ID from item_template");
-    if (res)
-    {
-        do
-        {
-            InsertNewHotfix(Hash, (*res)[0].GetUInt32());
-        } while (res->NextRow());
-    }
-
     uint32 oldMSTime = getMSTime();
 
     QueryResult result = HotfixDatabase.Query("SELECT Id, TableHash, RecordId, Deleted FROM hotfix_data ORDER BY Id");
@@ -2000,14 +1982,14 @@ std::set<uint32> DB2Manager::GetItemBonusTree(uint32 itemId, uint32 itemContext,
                     if (itemSelectorQualities != _itemLevelQualitySelectorQualities.end())
                     {
                         ItemQualities quality = ITEM_QUALITY_UNCOMMON;
-                        if (selector->MinItemLevel >= selectorQualitySet->IlvlEpic)
+                        /*if (selector->MinItemLevel >= selectorQualitySet->IlvlEpic)
                             quality = ITEM_QUALITY_EPIC;
                         else if (selector->MinItemLevel >= selectorQualitySet->IlvlRare)
-                            quality = ITEM_QUALITY_RARE;
-
-                        auto itemSelectorQuality = std::lower_bound(itemSelectorQualities->second.begin(), itemSelectorQualities->second.end(), quality, ItemLevelSelectorQualityEntryComparator{});
-
-                            quality = ITEM_QUALITY_RARE;
+                            quality = ITEM_QUALITY_RARE;*/
+                        auto itemSelectorQuality = std::find_if(itemSelectorQualities->second.begin(), itemSelectorQualities->second.end(), [&quality](ItemLevelSelectorQualityEntry const* _item) -> bool
+                        {
+                            return _item->Quality == quality;
+                        });
                         if (itemSelectorQuality != itemSelectorQualities->second.end())
                             bonusListIDs.insert((*itemSelectorQuality)->QualityItemBonusListID);
                     }

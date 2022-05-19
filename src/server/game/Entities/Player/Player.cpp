@@ -2268,12 +2268,6 @@ void Player::ResetAllPowers()
         case POWER_LUNAR_POWER:
             SetPower(POWER_LUNAR_POWER, 0);
             break;
-        case POWER_FURY:
-            SetPower(POWER_FURY, 0);
-            break;
-        case POWER_PAIN:
-            SetPower(POWER_PAIN, 0);
-            break;
         default:
             break;
     }
@@ -4440,9 +4434,6 @@ void Player::BuildPlayerRepop()
     corpse->ResetGhostTime();
 
     StopMirrorTimers();                                     //disable timers(bars)
-
-    // OnPlayerRepop hook
-    sScriptMgr->OnPlayerRepop(this);
 
     // set and clear other
     SetByteValue(UNIT_FIELD_BYTES_1, UNIT_BYTES_1_OFFSET_ANIM_TIER, UNIT_BYTE1_FLAG_ALWAYS_STAND);
@@ -8856,6 +8847,41 @@ void Player::SendLoot(ObjectGuid guid, LootType loot_type, bool aeLooting/* = fa
                 }
             }*/
 
+            //todo implement legacy loot
+            uint32 encoutnerId = go->GetGOInfo()->GetDungeonEncounter();
+            if (encoutnerId != 0)
+            {
+                if (InstanceMap* instance = go->GetMap()->ToInstanceMap())
+                {
+                    Map::PlayerList const& playerList = instance->GetPlayers();
+
+                    for (Map::PlayerList::const_iterator iterator = playerList.begin(); iterator != playerList.end(); ++iterator)
+                    {
+                        if (Player* player = iterator->GetSource())
+                        {
+                            if (auto items = sDB2Manager.GetJournalItemsByEncounter(encoutnerId))
+                            {
+                                uint8 mapDifficultyMask = instance->GetEncounterDifficultyMask();
+
+                                std::vector<JournalEncounterItemEntry const*> potentialItems;
+                                for (JournalEncounterItemEntry const* item : *items)
+                                    if (item->IsValidDifficultyMask(mapDifficultyMask) &&
+                                        (sDB2Manager.HasItemContext(item->ItemID, loot->GetItemContext())
+                                            || !sDB2Manager.HasItemContext(item->ItemID)))
+                                        potentialItems.push_back(item);
+
+                                Trinity::Containers::RandomResize(potentialItems, 1);
+
+                                for (JournalEncounterItemEntry const* item : potentialItems)
+                                {
+                                    loot->AddItem(LootStoreItem(item->ItemID, LOOT_ITEM_TYPE_ITEM, 0, 10, 0, LOOT_MODE_DEFAULT, 0, 1, 1), player);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             go->SetLootState(GO_ACTIVATED, this);
         }
 
@@ -12019,19 +12045,6 @@ InventoryResult Player::CanUseItem(Item* pItem, bool not_loading) const
             if (getLevel() < pItem->GetRequiredLevel())
                 return EQUIP_ERR_CANT_EQUIP_LEVEL_I;
 
-            if (pItem->GetEntry() == 133755)
-            {
-                uint8 categoryID = ARTIFACT_CATEGORY_PRIMARY;
-                uint32 artifactID = pProto->GetArtifactID();
-
-                if (ArtifactEntry const* entry = sArtifactStore.LookupEntry(artifactID))
-                    categoryID = static_cast<ArtifactCategory>(entry->ArtifactCategoryID);
-
-                if (categoryID == ARTIFACT_CATEGORY_FISHING)
-                    pItem->ActivateFishArtifact(artifactID);
-                return EQUIP_ERR_OK;
-            }
-
             InventoryResult res = CanUseItem(pProto);
             if (res != EQUIP_ERR_OK)
                 return res;
@@ -12596,9 +12609,6 @@ void Player::EquipChildItem(uint8 parentBag, uint8 parentSlot, Item* parentItem)
 
 void Player::AutoUnequipChildItem(Item* parentItem)
 {
-    if (!parentItem)
-        return;
-
     if (sDB2Manager.GetItemChildEquipment(parentItem->GetEntry()))
     {
         if (Item* childItem = GetChildItemByGuid(parentItem->GetChildItem()))
@@ -15701,7 +15711,6 @@ void Player::AddQuest(Quest const* quest, Object* questGiver)
 
     sScriptMgr->OnQuestStatusChange(this, quest_id);
     sScriptMgr->OnQuestStatusChange(this, quest, oldStatus, questStatusData.Status);
-    sScriptMgr->OnQuestAccept(this, quest);  
 }
 
 void Player::ForceCompleteQuest(uint32 quest_id)
@@ -15760,12 +15769,6 @@ void Player::ForceCompleteQuest(uint32 quest_id)
             case QUEST_OBJECTIVE_MONEY:
             {
                 ModifyMoney(obj.Amount);
-                break;
-            }
-            case QUEST_OBJECTIVE_AREATRIGGER:
-            {
-                SetQuestObjectiveData(obj, 1);
-                SendQuestUpdateAddCreditSimple(obj);
                 break;
             }
         }
@@ -16090,7 +16093,6 @@ void Player::RewardQuest(Quest const* quest, uint32 reward, Object* questGiver, 
             !spellInfo->HasEffect(DIFFICULTY_NONE, SPELL_EFFECT_APPLY_AURA) &&
             !spellInfo->HasEffect(DIFFICULTY_NONE, SPELL_EFFECT_SUMMON) &&
             !spellInfo->HasEffect(DIFFICULTY_NONE, SPELL_EFFECT_UPDATE_ZONE_AURAS_AND_PHASES) &&
-            !spellInfo->HasEffect(DIFFICULTY_NONE, SPELL_EFFECT_ADD_GARRISON_FOLLOWER) &&
             !spellInfo->HasEffect(DIFFICULTY_NONE, SPELL_EFFECT_DUMMY))
         {
             if (Unit* unit = questGiver->ToUnit())
@@ -24735,7 +24737,7 @@ void Player::SendInitialPacketsAfterAddToMap()
         DifficultyEntry const* difficulty = sDifficultyStore.AssertEntry(m_prevMapDifficulty);
         SendRaidDifficulty((difficulty->Flags & DIFFICULTY_FLAG_LEGACY) != 0, m_prevMapDifficulty);
     }
-    else if (GetMap()->IsNonRaidDungeon() || GetMap()->IsScenario())
+    else if (GetMap()->IsNonRaidDungeon())
     {
         m_prevMapDifficulty = GetMap()->GetDifficultyID();
         SendDungeonDifficulty(m_prevMapDifficulty);
@@ -28612,7 +28614,6 @@ uint8 Player::GetSlotEquipmentFromInventory(ItemTemplate const* proto) const
         case INVTYPE_RANGEDRIGHT:
             return EQUIPMENT_SLOT_MAINHAND;
         case INVTYPE_WEAPONOFFHAND:
-        case INVTYPE_HOLDABLE:
             return EQUIPMENT_SLOT_OFFHAND;
         default:
             return NULL_SLOT;

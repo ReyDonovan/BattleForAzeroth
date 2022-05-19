@@ -61,7 +61,7 @@ uint32 ChallengeModeMgr::GetRandomChallengeId(uint32 flags/* = 4*/)
     for (uint32 i = 0; i < sMapChallengeModeStore.GetNumRows(); ++i)
         if (MapChallengeModeEntry const* challengeModeEntry = sMapChallengeModeStore.LookupEntry(i))
             if (challengeModeEntry->Flags & flags &&
-                (challengeModeEntry->ID == 197 || challengeModeEntry->ID == 198 || challengeModeEntry->ID == 199 || challengeModeEntry->ID == 200 || challengeModeEntry->ID == 206 || challengeModeEntry->ID == 207 || challengeModeEntry->ID == 208 || challengeModeEntry->ID == 209 || challengeModeEntry->ID == 210 || challengeModeEntry->ID == 227 || challengeModeEntry->ID == 233 || challengeModeEntry->ID == 234 || challengeModeEntry->ID == 239)) // Temp fix, only doable dungeons here
+                (challengeModeEntry->ID == 197 || challengeModeEntry->ID == 198 || challengeModeEntry->ID == 199)) // Temp fix, only doable dungeons here
                 challenges.push_back(challengeModeEntry->ID);
 
     if (challenges.empty())

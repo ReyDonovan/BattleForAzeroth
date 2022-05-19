@@ -165,6 +165,8 @@ void PlayerRelocationNotifier::Visit(PlayerMapType &m)
 void PlayerRelocationNotifier::Visit(CreatureMapType &m)
 {
     bool relocated_for_ai = (&i_player == i_player.m_seer);
+    if (i_player.GetVehicle())
+        relocated_for_ai = true;
 
     for (CreatureMapType::iterator iter=m.begin(); iter != m.end(); ++iter)
     {

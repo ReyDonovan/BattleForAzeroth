@@ -8173,7 +8173,7 @@ void Unit::SetInCombatWith(Unit* enemy)
 
 void Unit::CombatStart(Unit* target, bool initialAggro)
 {
-    if (initialAggro)
+    if (initialAggro && !target->HasUnitState(UNIT_STATE_EVADE))
     {
         if (!target->IsStandState())
             target->SetStandState(UNIT_STAND_STATE_STAND);
@@ -9198,7 +9198,7 @@ Unit* Creature::SelectVictim(bool evadeIfNoVictim /*= true*/)
     // search nearby enemy before enter evade mode
     if (HasReactState(REACT_AGGRESSIVE))
     {
-        std::vector<Unit*> targets = SelectNearestTargetsInAttackDistance(m_CombatDistance ? m_CombatDistance : ATTACK_DISTANCE);
+        std::vector<Unit*> targets = SelectNearestTargetsInAttackDistance(GetAttackDistance(this));
 
         if (targets.size())
         {

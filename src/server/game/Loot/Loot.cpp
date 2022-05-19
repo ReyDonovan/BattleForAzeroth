@@ -275,12 +275,7 @@ bool Loot::FillLoot(uint32 lootId, LootStore const& store, Player* lootOwner, bo
     if (!lootOwner)
         return false;
 
-    _itemContext = lootOwner->GetMap()->GetDifficultyLootItemContext();
-
-    if (LFGDungeonsEntry const* dungeonEntry = sLFGMgr->GetPlayerLFGDungeonEntry(lootOwner->GetGUID()))
-        if (dungeonEntry->Flags[0] & lfg::LfgFlags::LFG_FLAG_TIMEWALKER)
-            _itemContext = uint8(ItemContext::TimeWalker);
-
+    GenerateItemContext(lootOwner);
 
     LootTemplate const* tab = store.GetLootFor(lootId);
 
@@ -303,6 +298,8 @@ void Loot::AddItem(LootStoreItem const& item, Player const* player /*= nullptr*/
 {
     if (!player)
         return;
+
+    GenerateItemContext(player);
 
     if (item.type == LOOT_ITEM_TYPE_CURRENCY)
     {
@@ -421,12 +418,13 @@ void Loot::BuildLootResponse(WorldPackets::Loot::LootResponse& packet, Player* v
     uint8 lootIndex = 0;
     for (LootItem const& item : playerItems)
     {
+        ++lootIndex;
         if (!item.is_looted && item.conditions.empty() && item.AllowedForPlayer(viewer))
         {
             if (!item.currency)
             {
                 WorldPackets::Loot::LootItemData lootItem;
-                lootItem.LootListID = ++lootIndex;
+                lootItem.LootListID = lootIndex;
                 lootItem.UIType = LOOT_SLOT_TYPE_OWNER;
                 lootItem.Quantity = item.count;
                 lootItem.Loot.Initialize(item);
@@ -435,7 +433,7 @@ void Loot::BuildLootResponse(WorldPackets::Loot::LootResponse& packet, Player* v
             else
             {
                 WorldPackets::Loot::LootItemData lootItem;
-                lootItem.LootListID = ++lootIndex;
+                lootItem.LootListID = lootIndex;
                 lootItem.UIType = LOOT_SLOT_TYPE_OWNER;
                 lootItem.Quantity = item.count;
                 lootItem.Loot.Initialize(item);
@@ -460,6 +458,18 @@ LootSlotType Loot::GetUITypeByPermission(LootItem const& item, PermissionTypes p
     }
 
     return slotType;
+}
+
+void Loot::GenerateItemContext(Unit const* contextUnit)
+{
+    if (!contextUnit)
+        return;
+    _itemContext = contextUnit->GetMap()->GetDifficultyLootItemContext();
+
+    if (Player const* player = contextUnit->ToPlayer())
+        if (LFGDungeonsEntry const* dungeonEntry = sLFGMgr->GetPlayerLFGDungeonEntry(player->GetGUID()))
+            if (dungeonEntry->Flags[0] & lfg::LfgFlags::LFG_FLAG_TIMEWALKER)
+                _itemContext = uint8(ItemContext::TimeWalker);
 }
 
 //

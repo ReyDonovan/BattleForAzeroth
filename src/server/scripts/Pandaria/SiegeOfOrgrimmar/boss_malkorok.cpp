@@ -99,18 +99,11 @@ enum Adds
 enum Events
 {
     EVENT_BERSERK   = 1,
-    EVENT_SEISMIC_SLAM,
     EVENT_ARCING_SMASH_JUMP,
-    EVENT_BREATH_OF_YSHAARJ,
     EVENT_IMPLODING_ENERGY,
     EVENT_DISPLACED_ENERGY,
     EVENT_CLEAR_ARCING_SMASH,
     EVENT_BLOOD_RAGE,
-};
-
-enum Datas
-{
-    
 };
 
 enum Actions

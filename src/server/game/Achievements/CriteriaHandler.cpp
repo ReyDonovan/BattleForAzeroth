@@ -705,12 +705,7 @@ void CriteriaHandler::UpdateCriteria(CriteriaTypes type, uint64 miscValue1 /*= 0
             case CRITERIA_TYPE_SEND_EVENT_SCENARIO:
                 if (miscValue1 != uint64(criteria->Entry->Asset.ScenarioEventID))
                     continue;
-                SetCriteriaProgress(criteria, 1, referencePlayer, PROGRESS_ACCUMULATE);
-                break;
-            case CRITERIA_TYPE_SEND_EVENT:
-                if (miscValue1 != criteria->Entry->Asset.EventID)
-                    continue;
-                SetCriteriaProgress(criteria, 1, referencePlayer, PROGRESS_ACCUMULATE);
+                SetCriteriaProgress(criteria, 1, referencePlayer);
                 break;
             // FIXME: not triggered in code as result, need to implement
             case CRITERIA_TYPE_COMPLETE_RAID:
@@ -766,6 +761,7 @@ void CriteriaHandler::UpdateCriteria(CriteriaTypes type, uint64 miscValue1 /*= 0
             case CRITERIA_TYPE_COMPLETE_CHALLENGE_MODE_GUILD:
             case CRITERIA_TYPE_DEFEAT_CREATURE_GROUP:
             case CRITERIA_TYPE_COMPLETE_CHALLENGE_MODE:
+            case CRITERIA_TYPE_SEND_EVENT:
             case CRITERIA_TYPE_COOK_RECIPES_GUILD:
             case CRITERIA_TYPE_EARN_PET_BATTLE_ACHIEVEMENT_POINTS:
             case CRITERIA_TYPE_RELEASE_SPIRIT:
