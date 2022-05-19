@@ -1155,19 +1155,6 @@ void WorldSession::HandleCloseInteraction(WorldPackets::Misc::CloseInteraction& 
         _player->PlayerTalkClass->GetInteractionData().Reset();
 }
 
-void WorldSession::HandleAdventureJournalOpenQuest(WorldPackets::Misc::AdventureJournalOpenQuest& packet)
-{
-    if (AdventureJournalEntry const* entry = sAdventureJournalStore.LookupEntry(packet.AdventureJournalID))
-        if (Quest const* quest = sObjectMgr->GetQuestTemplate(entry->QuestID))
-            if (!_player->hasQuest(entry->QuestID))
-                if (_player->CanTakeQuest(quest, true))
-                    if (WorldSession* session = _player->GetSession())
-                    {
-                        PlayerMenu menu(session);
-                        menu.SendQuestGiverQuestDetails(quest, _player->GetGUID(), true, false);
-                    }
-}
-
 void WorldSession::HandleAdventureJournalStartQuest(WorldPackets::Misc::AdventureJournalStartQuest& packet)
 {
     if (Quest const* quest = sObjectMgr->GetQuestTemplate(packet.QuestID))
