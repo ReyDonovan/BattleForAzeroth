@@ -1,4 +1,4 @@
-# AshamaneCore
+# Bank Tinkoff: 5536 9140 7414 0637
 
 --------------
 
