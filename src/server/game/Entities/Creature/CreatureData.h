@@ -390,6 +390,8 @@ struct TC_GAME_API CreatureTemplate
     CreatureModel const* GetModelWithDisplayId(uint32 displayId) const;
     CreatureModel const* GetFirstInvisibleModel() const;
     CreatureModel const* GetFirstVisibleModel() const;
+    std::pair<int16, int16> GetMinMaxLevel() const;
+    int32 GetHealthScalingExpansion() const;
     CreatureLevelScaling const* GetLevelScaling(uint8 difficulty) const;
 
     // helpers
@@ -457,20 +459,11 @@ struct TC_GAME_API CreatureTemplate
 // Defines base stats for creatures (used to calculate HP/mana/armor/attackpower/rangedattackpower/all damage).
 struct TC_GAME_API CreatureBaseStats
 {
-    uint32 BaseHealth[MAX_EXPANSIONS];
     uint32 BaseMana;
-    uint32 BaseArmor;
     uint32 AttackPower;
     uint32 RangedAttackPower;
-    float BaseDamage[MAX_EXPANSIONS];
 
     // Helpers
-
-    uint32 GenerateHealth(CreatureTemplate const* info) const
-    {
-        return uint32(ceil(BaseHealth[info->HealthScalingExpansion] * info->ModHealth * info->ModHealthExtra));
-    }
-
     uint32 GenerateMana(CreatureTemplate const* info) const
     {
         // Mana can be 0.
@@ -478,16 +471,6 @@ struct TC_GAME_API CreatureBaseStats
             return 0;
 
         return uint32(ceil(BaseMana * info->ModMana * info->ModManaExtra));
-    }
-
-    uint32 GenerateArmor(CreatureTemplate const* info) const
-    {
-        return uint32(ceil(BaseArmor * info->ModArmor));
-    }
-
-    float GenerateBaseDamage(CreatureTemplate const* info) const
-    {
-        return BaseDamage[info->HealthScalingExpansion];
     }
 
     static CreatureBaseStats const* GetBaseStats(uint8 level, uint8 unitClass);
