@@ -1,6 +1,6 @@
 # Bank Tinkoff: 5536 9140 7414 0637
 # Based code AshamaneCore 8.0.1 28153
-
+* [Our Discord](https://discord.gg/TjEsvRv)
 --------------
 
 
