@@ -567,9 +567,6 @@ struct npc_taelia_get_your_bearings : public FollowerAI
     std::map<uint32, ConvByKillStruct> convByKillCredit =
     {
         { 124720, ConvByKillStruct(0, 124586, 5365) },
-        { 124725, ConvByKillStruct(1, 124587, 5366) },
-        { 135064, ConvByKillStruct(2, 124588, 5362) },
-        { 135153, ConvByKillStruct(3, 124768, 5375) },
     };
 
     void IsSummonedBy(Unit* unit) override
@@ -591,19 +588,19 @@ struct npc_taelia_get_your_bearings : public FollowerAI
                 {
                     bool justCompletedObjective = false;
                     for (auto itr : convByKillCredit)
-                        if (player->FindNearestCreature(itr.first, 10.f))
+                        if (player->FindNearestCreature(itr.first, 10.f))						
                             if (!player->GetQuestObjectiveData(QUEST_GET_YOUR_BEARINGS, itr.second.ObjectiveIndex))
                             {
                                 player->KilledMonsterCredit(itr.second.KillCreditID);
                                 player->PlayConversation(itr.second.ConversationID);
                                 justCompletedObjective = true;
                             }
+                }
 
-                    if (player->GetQuestStatus(QUEST_GET_YOUR_BEARINGS) == QUEST_STATUS_COMPLETE)
-                    {
-                        player->PlayConversation(9556);
-                        me->SetFlag64(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_QUESTGIVER);
-                    }
+                if (player->GetQuestStatus(QUEST_GET_YOUR_BEARINGS) == QUEST_STATUS_COMPLETE)
+                {
+                    player->PlayConversation(9556);
+                    me->SetFlag64(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_QUESTGIVER);
                 }
 
                 if (player->GetQuestStatus(QUEST_THE_OLD_KNIGHT) == QUEST_STATUS_INCOMPLETE)

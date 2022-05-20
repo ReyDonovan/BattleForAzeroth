@@ -568,6 +568,7 @@ enum SMART_ACTION
     SMART_ACTION_PLAY_ANIMKIT                       = 128,    // id, type (0 = oneShot, 1 = aiAnim, 2 = meleeAnim, 3 = movementAnim, 4 = spellVisualKit)
     SMART_ACTION_SCENE_PLAY                         = 129,    // sceneId
     SMART_ACTION_SCENE_CANCEL                       = 130,    // sceneId
+    SMART_ACTION_CREATE_CONVERSATION                = 143,    // conversation_template.id
 
     // Ashamane' specific actions
     SMART_ACTION_PLAY_SPELL_VISUAL_KIT              = 200,    // id, type, duration.
@@ -1204,6 +1205,11 @@ struct SmartAction
             uint32 spellId;
             uint32 triggered;
         } castOffSet;
+
+        struct
+        {
+            uint32 id;
+        } conversation;
         //! Note for any new future actions
         //! All parameters must have type uint32
 
