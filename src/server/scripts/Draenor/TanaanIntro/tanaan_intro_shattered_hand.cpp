@@ -449,191 +449,202 @@ public:
 };
 
 /// 82057 - Shattered Hand Brawler
-class npc_shattered_hand_brawler : public CreatureScript
+struct npc_shattered_hand_brawler : public ScriptedAI
 {
-public:
-    npc_shattered_hand_brawler() : CreatureScript("npc_shattered_hand_brawler") { }
+    npc_shattered_hand_brawler(Creature* creature) : ScriptedAI(creature) { }
 
-    CreatureAI* GetAI(Creature* creature) const override
+    Creature* GetNpcToAttack()
     {
-        return new npc_shattered_hand_brawlerAI(creature);
+        std::list<Creature*> creatureList;
+        me->GetCreatureListWithEntryInGrid(creatureList, me->GetEntry(), 200.f);
+        if (creatureList.size() < 50)
+            me->CastSpell(me, 167314, true);
+
+        creatureList.remove_if([](Creature* creature) -> bool
+        {
+            if (creature->getFaction() != 2580)
+                return true;
+
+            if (creature->GetPositionX() > 4450.0f ||
+                creature->GetPositionX() < 4350.0f)
+                return true;
+
+            if (creature->GetPositionY() > -2775.0f ||
+                creature->GetPositionY() < -2875.0f)
+                return true;
+
+            if (arenaFighterCountByNpc[creature->GetGUID()].size() >= 2)
+                return true;
+
+            return false;
+        });
+
+        if (!creatureList.size())
+            return nullptr;
+
+        Creature* npcToAttack = Trinity::Containers::SelectRandomContainerElement(creatureList);
+        AddToAttackerList(npcToAttack);
+        return npcToAttack;
     }
 
-    struct npc_shattered_hand_brawlerAI : public ScriptedAI
+    void AddToAttackerList(Creature* npc)
     {
-        npc_shattered_hand_brawlerAI(Creature* creature) : ScriptedAI(creature) { }
+        if (npc)
+            arenaFighterCountByNpc[npc->GetGUID()].push_back(me->GetGUID());
+    }
 
-        Creature* GetNpcToAttack()
+    void RemoveFromAttackerListOnDeath()
+    {
+        for (auto attackerGuids : arenaFighterCountByNpc)
+            arenaFighterCountByNpc[attackerGuids.first].remove(me->GetGUID());
+    }
+
+    void Reset() override
+    {
+        PhasingHandler::AddPhase(me, 180);
+        PhasingHandler::AddPhase(me, 183);
+        PhasingHandler::AddPhase(me, 184);
+
+        if (me->GetVictim() || me->IsInEvadeMode())
+            return;
+  
+        std::list<Unit*> list;
+        me->GetAttackableUnitListInRange(list, 70.f);
+        for (auto enemy : list)
         {
-            std::list<Creature*> creatureList;
-            me->GetCreatureListInGrid(creatureList, 100.0f);
+            if (enemy->ToPlayer())
+                continue;
+            me->AI()->AttackStart(enemy);
+            break;
+        }
+    }
 
-            creatureList.remove_if([](Creature* creature) -> bool
+    void JustReachedHome() override
+    {
+        me->Kill(me);
+    }
+
+    void DamageDealt(Unit* victim, uint32& damage, DamageEffectType /*damageType*/) override
+    {
+        if (victim->ToPlayer())
+        {
+            if (victim->GetHealthPct() <= 80)
+                damage /= 10;
+            else
+                damage = 0;
+        }
+    }
+
+    void DamageTaken(Unit* killer, uint32& damage) override
+    {
+        if (killer->ToPlayer())
+        {
+            damage *= 2;
+            return;
+        }
+        damage /= 2;
+    }
+
+    void JustDied(Unit* killer) override
+    {
+        RemoveFromAttackerListOnDeath();
+
+        if (Creature* kargath = ObjectAccessor::GetCreature(*me, kargathGuid))
+            if (kargath->AI())
+                kargath->AI()->DoAction(1);
+
+        if (killer == me)
+            return;
+
+        std::list<Player*> playerList;
+        me->GetPlayerListInGrid(playerList, 2000.f);
+
+        for (auto player : playerList)
+        {
+            if (!player->HasQuest(TanaanQuests::QuestKillYourHundred) || !player->IsInPhase(me))
+                continue;
+
+            if (player->GetQuestObjectiveCounter(TanaanQuestObjectives::ObjCombattantSlainAddHidden) == 99)
+                continue;
+
+            if (player->GetQuestObjectiveCounter(TanaanQuestObjectives::ObjCombattantSlainAddHidden) == 98)
             {
-                if (creature->getFaction() != 2580)
-                    return true;
+                player->RemoveAurasDueToSpell(TanaanPhases::PhaseArenaFight);
+                player->RemoveAurasDueToSpell(TanaanPhases::PhaseArenaFightAlliance);
+                player->RemoveAurasDueToSpell(TanaanPhases::PhaseArenaFightHorde);
+                player->RemoveAurasDueToSpell(TanaanPhases::PhaseArenaExitGateClose);
+                player->GetSceneMgr().PlaySceneByPackageId(TanaanSceneObjects::SceneEscapingTheArena, SCENEFLAG_NOT_CANCELABLE | SCENEFLAG_UNK16);
+            }
 
-                if (creature->GetPositionX() > 4450.0f ||
-                    creature->GetPositionX() < 4350.0f)
-                    return true;
-
-                if (creature->GetPositionY() > -2775.0f ||
-                    creature->GetPositionY() < -2875.0f)
-                    return true;
-
-                if (arenaFighterCountByNpc[creature->GetGUID()].size() >= 2)
-                    return true;
-
-                return false;
-            });
-
-            if (!creatureList.size())
-                return nullptr;
-
-            Creature* npcToAttack = Trinity::Containers::SelectRandomContainerElement(creatureList);
-            AddToAttackerList(npcToAttack);
-            return npcToAttack;
+            player->KilledMonsterCredit(TanaanKillCredits::CreditCombattantSlainInArena);
+            player->KilledMonsterCredit(TanaanKillCredits::CreditCombattantSlainAdd);
         }
+    }
 
-        void AddToAttackerList(Creature* npc)
+    void IsSummonedBy(Unit* summoner) override
+    {
+        kargathGuid = summoner->GetGUID();
+
+        if (me->GetPositionZ() < 10.0f)
         {
-            if (npc)
-                arenaFighterCountByNpc[npc->GetGUID()].push_back(me->GetGUID());
+            MovementInform(EFFECT_MOTION_TYPE, 1);
+            return;
         }
 
-        void RemoveFromAttackerListOnDeath()
+        Position jumpPosition;
+        Position creaturePosition = me->GetPosition();
+        GetPositionWithDistInFront(&creaturePosition, 5.0f, jumpPosition);
+        jumpPosition.m_positionZ = 4.75f;
+        me->GetMotionMaster()->MoveJump(jumpPosition, 10.0f, 10.0f, 1);
+    }
+
+    void MovementInform(uint32 type, uint32 id) override
+    {
+        if (type != EFFECT_MOTION_TYPE && type != POINT_MOTION_TYPE)
+            return;
+
+        if (id == 1)
         {
-            for (auto attackerGuids : arenaFighterCountByNpc)
-                arenaFighterCountByNpc[attackerGuids.first].remove(me->GetGUID());
+            if (Creature* npcToAttack = GetNpcToAttack())
+            {
+                AttackStart(npcToAttack);
+                me->getThreatManager().addThreat(npcToAttack, 200.0f);
+            }
+            else
+            {
+                // Pas de mob ? attaquer, on le fait bouger un peu
+                // pour un visuel plus joli avant de le supprimer
+                me->GetMotionMaster()->MovePoint(2, frand(4376.39f, 4428.70f), frand(-2846.56f, -2804.52f), 5.0f);
+            }
         }
-
-        void Reset() override
-        {
-            PhasingHandler::AddPhase(me, 180);
-            PhasingHandler::AddPhase(me, 183);
-            PhasingHandler::AddPhase(me, 184);
-        }
-
-        void JustReachedHome() override
+        else if (id == 2)
         {
             me->Kill(me);
         }
+    }
 
-        void DamageDealt(Unit* victim, uint32& damage, DamageEffectType /*damageType*/) override
-        {
-            if (victim->GetTypeId() == TYPEID_UNIT)
-                if (victim->GetHealthPct() <= 80)
-                    damage = 0;
-        }
-
-        void JustDied(Unit* killer) override
-        {
-            RemoveFromAttackerListOnDeath();
-
-            if (Creature* kargath = ObjectAccessor::GetCreature(*me, kargathGuid))
-                if (kargath->AI())
-                    kargath->AI()->DoAction(1);
-
-            // Si il s'est tué lui-même car il ne trouvait pas de pnjs, on ne donne pas de crédit au joueur
-            if (killer == me)
-                return;
-
-            std::list<Player*> playerList;
-            GetPlayerListInGrid(playerList, me, 80.0f);
-
-            for (Player* player : playerList)
-            {
-                if (!player->HasQuest(TanaanQuests::QuestKillYourHundred) || !player->IsInPhase(me))
-                    continue;
-
-                if (player->GetQuestObjectiveCounter(TanaanQuestObjectives::ObjCombattantSlainAddHidden) == 99)
-                    continue;
-
-                if (player->GetQuestObjectiveCounter(TanaanQuestObjectives::ObjCombattantSlainAddHidden) == 98)
-                {
-                    player->RemoveAurasDueToSpell(TanaanPhases::PhaseArenaFight);
-                    player->RemoveAurasDueToSpell(TanaanPhases::PhaseArenaFightAlliance);
-                    player->RemoveAurasDueToSpell(TanaanPhases::PhaseArenaFightHorde);
-                    player->RemoveAurasDueToSpell(TanaanPhases::PhaseArenaExitGateClose);
-                    player->GetSceneMgr().PlaySceneByPackageId(TanaanSceneObjects::SceneEscapingTheArena, SCENEFLAG_NOT_CANCELABLE | SCENEFLAG_UNK16);
-                }
-
-                player->KilledMonsterCredit(TanaanKillCredits::CreditCombattantSlainInArena);
-                player->KilledMonsterCredit(TanaanKillCredits::CreditCombattantSlainAdd);
-            }
-        }
-
-        void IsSummonedBy(Unit* summoner) override
-        {
-            kargathGuid = summoner->GetGUID();
-
-            // Si il est déjà au sol, on ne le fait pas sauter, il passe directement à l'attaque sur un PNJ
-            if (me->GetPositionZ() < 10.0f)
-            {
-                MovementInform(EFFECT_MOTION_TYPE, 1);
-                return;
-            }
-
-            Position jumpPosition;
-            Position creaturePosition = me->GetPosition();
-            GetPositionWithDistInFront(&creaturePosition, 5.0f, jumpPosition);
-            jumpPosition.m_positionZ = 4.75f;
-            me->GetMotionMaster()->MoveJump(jumpPosition, 10.0f, 10.0f, 1);
-        }
-
-        void MovementInform(uint32 type, uint32 id) override
-        {
-            if (type != EFFECT_MOTION_TYPE && type != POINT_MOTION_TYPE)
-                return;
-
-            if (id == 1)
-            {
-                if (Creature* npcToAttack = GetNpcToAttack())
-                {
-                    AttackStart(npcToAttack);
-                    me->getThreatManager().addThreat(npcToAttack, 20000.0f);
-                }
-                else
-                {
-                    // Pas de mob à attaquer, on le fait bouger un peu
-                    // pour un visuel plus joli avant de le supprimer
-                    me->GetMotionMaster()->MovePoint(2, frand(4376.39f, 4428.70f), frand(-2846.56f, -2804.52f), 5.0f);
-                }
-            }
-            else if (id == 2)
-            {
-                me->Kill(me);
-            }
-        }
-
+    private:
         ObjectGuid kargathGuid;
-    };
 };
 
-// Est aussi utilisé par les PNJS après l'arène
-class npc_tanaan_arena_helper : public CreatureScript
+struct npc_tanaan_arena_helper : public ScriptedAI
 {
-public:
-    npc_tanaan_arena_helper() : CreatureScript("npc_tanaan_arena_helper")
-    {
-    }
+    npc_tanaan_arena_helper(Creature* creature) : ScriptedAI(creature) { }
 
-    CreatureAI* GetAI(Creature* creature) const override
+    void DamageTaken(Unit* attacker, uint32& damage) override
     {
-        return new npc_tanaan_arena_helperAI(creature);
-    }
-
-    struct npc_tanaan_arena_helperAI : public ScriptedAI
-    {
-        npc_tanaan_arena_helperAI(Creature* creature) : ScriptedAI(creature) { }
-
-        void DamageTaken(Unit* /*attacker*/, uint32& damage) override
+        if (attacker->ToPlayer())
         {
             if (me->GetHealthPct() <= 80)
-                damage = 0;
+            {
+                damage *= 2;
+                return;
+            }
         }
-    };
+        damage /= 2;
+    }
 };
+
 
 /// 300006 - Final Tanaan Trigger
 class npc_tanaan_napestone_riverbeast : public CreatureScript
@@ -690,8 +701,8 @@ void AddSC_tanaan_intro_shattered_hand()
     new npc_archmage_khadgar_bridge();
     new npc_tanaan_khadgar_bridge();
     new npc_kargath_bladefist();
-    new npc_shattered_hand_brawler();
-    new npc_tanaan_arena_helper();
+    RegisterCreatureAI(npc_shattered_hand_brawler);
+    RegisterCreatureAI(npc_tanaan_arena_helper);
     new npc_tanaan_napestone_riverbeast();
     new npc_tanaan_mandragora();
 
