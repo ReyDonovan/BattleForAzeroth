@@ -455,9 +455,16 @@ void ObjectMgr::LoadCreatureTemplates()
     // We load the creature models after loading but before checking
     LoadCreatureTemplateModels();
 
-    // Checking needs to be done after loading because of the difficulty self referencing
     for (CreatureTemplateContainer::const_iterator itr = _creatureTemplateStore.begin(); itr != _creatureTemplateStore.end(); ++itr)
+    {
+        // Checking needs to be done after loading because of the difficulty self referencing
         CheckCreatureTemplate(&itr->second);
+        if (CreatureDifficultyEntry const* creatureDifficulty = sDB2Manager.GetCreatureDifficulty(itr->first))
+        {
+            if (creatureDifficulty->Flags[3] & CREATURE_DIFFICULTYFLAGS_4_NO_NPC_DAMAGE_BELOW_85PCT)
+                _creatureTemplateSparringStore[itr->first].push_back(85.0f);
+        }
+    }
 
     TC_LOG_INFO("server.loading", ">> Loaded %u creature definitions in %u ms", uint32(_creatureTemplateStore.size()), GetMSTimeDiffToNow(oldMSTime));
 }
@@ -740,6 +747,47 @@ void ObjectMgr::LoadCreatureTemplateAddons()
     while (result->NextRow());
 
     TC_LOG_INFO("server.loading", ">> Loaded %u creature template addons in %u ms", count, GetMSTimeDiffToNow(oldMSTime));
+}
+
+void ObjectMgr::LoadCreatureTemplateSparring()
+{
+    uint32 oldMSTime = getMSTime();
+
+    //                                                 0               1
+    QueryResult result = WorldDatabase.Query("SELECT Entry, NoNPCDamageBelowHealthPct FROM creature_template_sparring");
+
+    if (!result)
+    {
+        TC_LOG_INFO("server.loading", ">> Loaded 0 creature template sparring definitions. DB table `creature_template_sparring` is empty.");
+        return;
+    }
+
+    uint32 count = 0;
+    do
+    {
+        Field* fields = result->Fetch();
+
+        uint32 entry = fields[0].GetUInt32();
+        uint8 noNPCDamageBelowHealthPct = fields[1].GetUInt8();
+
+        if (!sObjectMgr->GetCreatureTemplate(entry))
+        {
+            TC_LOG_ERROR("sql.sql", "Creature template (Entry: %u) does not exist but has a record in `creature_template_sparring`", entry);
+            continue;
+        }
+
+        if (noNPCDamageBelowHealthPct < 0 || noNPCDamageBelowHealthPct > 100)
+        {
+            TC_LOG_ERROR("sql.sql", "Creature (Entry: %u) has invalid NoNPCDamageBelowHealthPct (%u) defined in `creature_template_sparring`. Skipping",
+                entry, noNPCDamageBelowHealthPct);
+            continue;
+        }
+        _creatureTemplateSparringStore[entry].push_back(noNPCDamageBelowHealthPct);
+
+        ++count;
+    } while (result->NextRow());
+
+    TC_LOG_INFO("server.loading", ">> Loaded %u creature template sparring in %u ms", count, GetMSTimeDiffToNow(oldMSTime));
 }
 
 void ObjectMgr::LoadCreatureScalingData()
@@ -1386,6 +1434,11 @@ CreatureAddon const* ObjectMgr::GetCreatureTemplateAddon(uint32 entry) const
         return &(itr->second);
 
     return nullptr;
+}
+
+std::vector<float> const* ObjectMgr::GetCreatureTemplateSparringValues(uint32 entry) const
+{
+    return Trinity::Containers::MapGetValuePtr(_creatureTemplateSparringStore, entry);
 }
 
 EquipmentInfo const* ObjectMgr::GetEquipmentInfo(uint32 entry, int8& id) const

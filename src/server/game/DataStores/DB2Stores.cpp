@@ -93,6 +93,7 @@ DB2Storage<CinematicCameraEntry>                sCinematicCameraStore("Cinematic
 DB2Storage<CinematicSequencesEntry>             sCinematicSequencesStore("CinematicSequences.db2", CinematicSequencesLoadInfo::Instance());
 DB2Storage<ContentTuningEntry>                  sContentTuningStore("ContentTuning.db2", ContentTuningLoadInfo::Instance());
 DB2Storage<ConversationLineEntry>               sConversationLineStore("ConversationLine.db2", ConversationLineLoadInfo::Instance());
+DB2Storage<CreatureDifficultyEntry>             sCreatureDifficultyStore("CreatureDifficulty.db2", CreatureDifficultyLoadInfo::Instance());
 DB2Storage<CreatureDisplayInfoEntry>            sCreatureDisplayInfoStore("CreatureDisplayInfo.db2", CreatureDisplayInfoLoadInfo::Instance());
 DB2Storage<CreatureDisplayInfoExtraEntry>       sCreatureDisplayInfoExtraStore("CreatureDisplayInfoExtra.db2", CreatureDisplayInfoExtraLoadInfo::Instance());
 DB2Storage<CreatureFamilyEntry>                 sCreatureFamilyStore("CreatureFamily.db2", CreatureFamilyLoadInfo::Instance());
@@ -389,6 +390,7 @@ namespace
     std::set<std::tuple<uint8, uint8, uint32>> _characterFacialHairStyles;
     std::multimap<std::tuple<uint8, uint8, CharBaseSectionVariation>, CharSectionsEntry const*> _charSections;
     CharStartOutfitContainer _charStartOutfits;
+    std::unordered_map<uint32 /*creatureId*/, CreatureDifficultyEntry const*> _creatureDifficulties;
     std::array<ChrClassUIDisplayEntry const*, MAX_CLASSES> _uiDisplayByClass;
     uint32 _powersByClass[MAX_CLASSES][MAX_POWERS];
     ChrSpecializationByIndexContainer _chrSpecializationsByIndex;
@@ -587,6 +589,7 @@ void DB2Manager::LoadStores(std::string const& dataPath, uint32 defaultLocale)
     LOAD_DB2(sCinematicSequencesStore);
     LOAD_DB2(sContentTuningStore);
     LOAD_DB2(sConversationLineStore);
+    LOAD_DB2(sCreatureDifficultyStore);
     LOAD_DB2(sCreatureDisplayInfoStore);
     LOAD_DB2(sCreatureDisplayInfoExtraStore);
     LOAD_DB2(sCreatureFamilyStore);
@@ -850,6 +853,9 @@ void DB2Manager::LoadStores(std::string const& dataPath, uint32 defaultLocale)
         addedSections[sectionKey].insert(sectionCombination);
         _charSections.insert({ sectionKey, charSection });
     }
+
+    for (CreatureDifficultyEntry const* creatureDifficulty : sCreatureDifficultyStore)
+        _creatureDifficulties[creatureDifficulty->CreatureID] = creatureDifficulty;
 
     for (ChrClassUIDisplayEntry const* uiDisplay : sChrClassUIDisplayStore)
     {
@@ -1580,6 +1586,11 @@ ChrClassUIDisplayEntry const* DB2Manager::GetUiDisplayForClass(Classes unitClass
 {
     ASSERT(unitClass < MAX_CLASSES);
     return _uiDisplayByClass[unitClass];
+}
+
+CreatureDifficultyEntry const* DB2Manager::GetCreatureDifficulty(uint32 creatureId) const
+{
+    return Trinity::Containers::MapGetValuePtr(_creatureDifficulties, creatureId);
 }
 
 char const* DB2Manager::GetClassName(uint8 class_, LocaleConstant locale /*= DEFAULT_LOCALE*/)

@@ -1253,6 +1253,32 @@ struct ConversationLineLoadInfo
     }
 };
 
+struct CreatureDifficultyLoadInfo
+{
+    static DB2LoadInfo const* Instance()
+    {
+        static DB2FieldMeta const fields[] =
+        {
+            { false, FT_INT, "ID" },
+            { true, FT_BYTE, "ExpansionID" },
+            { true, FT_BYTE, "MinLevel" },
+            { true, FT_BYTE, "MaxLevel" },
+            { false, FT_SHORT, "FactionID" },
+            { true, FT_INT, "ContentTuningID" },
+            { true, FT_INT, "Flags1" },
+            { true, FT_INT, "Flags2" },
+            { true, FT_INT, "Flags3" },
+            { true, FT_INT, "Flags4" },
+            { true, FT_INT, "Flags5" },
+            { true, FT_INT, "Flags6" },
+            { true, FT_INT, "Flags7" },
+            { true, FT_INT, "CreatureID" },
+        };
+        static DB2LoadInfo const loadInfo(&fields[0], std::extent<decltype(fields)>::value, CreatureDifficultyMeta::Instance(), HOTFIX_SEL_CREATURE_DIFFICULTY);
+        return &loadInfo;
+    }
+};
+
 struct CreatureDisplayInfoLoadInfo
 {
     static DB2LoadInfo const* Instance()
