@@ -627,25 +627,6 @@ struct npc_shattered_hand_brawler : public ScriptedAI
         ObjectGuid kargathGuid;
 };
 
-struct npc_tanaan_arena_helper : public ScriptedAI
-{
-    npc_tanaan_arena_helper(Creature* creature) : ScriptedAI(creature) { }
-
-    void DamageTaken(Unit* attacker, uint32& damage) override
-    {
-        if (attacker->ToPlayer())
-        {
-            if (me->GetHealthPct() <= 80)
-            {
-                damage *= 2;
-                return;
-            }
-        }
-        damage /= 2;
-    }
-};
-
-
 /// 300006 - Final Tanaan Trigger
 class npc_tanaan_napestone_riverbeast : public CreatureScript
 {
@@ -702,7 +683,6 @@ void AddSC_tanaan_intro_shattered_hand()
     new npc_tanaan_khadgar_bridge();
     new npc_kargath_bladefist();
     RegisterCreatureAI(npc_shattered_hand_brawler);
-    RegisterCreatureAI(npc_tanaan_arena_helper);
     new npc_tanaan_napestone_riverbeast();
     new npc_tanaan_mandragora();
 
