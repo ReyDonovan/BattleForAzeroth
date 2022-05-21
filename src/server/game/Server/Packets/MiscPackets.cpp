@@ -720,11 +720,6 @@ void WorldPackets::Misc::FactionSelect::Read()
     _worldPacket >> FactionChoice;
 }
 
-void WorldPackets::Misc::AdventureJournalStartQuest::Read()
-{
-    _worldPacket >> QuestID;
-}
-
 WorldPacket const* WorldPackets::Misc::StartTimer::Write()
 {
     _worldPacket << TimeLeft;

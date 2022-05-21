@@ -89,6 +89,7 @@ namespace WorldPackets
     namespace AdventureJournal
     {
         class AdventureJournalOpenQuest;
+        class AdventureMapStartQuest;
     }
 
     namespace AreaTrigger
@@ -533,9 +534,7 @@ namespace WorldPackets
         class SetTaxiBenchmarkMode;
         class MountSetFavorite;
         class CloseInteraction;
-        class AdventureJournalOpenQuest;
         class FactionSelect;
-        class AdventureJournalStartQuest;
         class StartTimer;
         class StartElapsedTimer;
         class OpenAlliedRaceDetailsGiver;
@@ -1762,11 +1761,11 @@ class TC_GAME_API WorldSession
         void HandleRequestCategoryCooldowns(WorldPackets::Spells::RequestCategoryCooldowns& requestCategoryCooldowns);
         void HandleCloseInteraction(WorldPackets::Misc::CloseInteraction& closeInteraction);
         void HandleSelectFactionOpcode(WorldPackets::Misc::FactionSelect& selectFaction);
-        void HandleAdventureJournalStartQuest(WorldPackets::Misc::AdventureJournalStartQuest& packet);
         void HandleSetWarModeOpcode(WorldPackets::Misc::SetWarMode& packet);
 
         // Adventure Journal
         void HandleAdventureJournalOpenQuest(WorldPackets::AdventureJournal::AdventureJournalOpenQuest& openQuest);
+        void HandleAdventureJournalStartQuest(WorldPackets::AdventureJournal::AdventureMapStartQuest& startQuest);
 
         // Toys
         void HandleAddToy(WorldPackets::Toy::AddToy& packet);

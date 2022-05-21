@@ -33,6 +33,16 @@ namespace WorldPackets
 
             int32 AdventureJournalID = 0;
         };
+
+        class AdventureMapStartQuest final : public ClientPacket
+        {
+        public:
+            AdventureMapStartQuest(WorldPacket&& packet) : ClientPacket(CMSG_ADVENTURE_JOURNAL_START_QUEST, std::move(packet)) { }
+
+            void Read() override;
+
+            int32 QuestID = 0;
+        };
     }
 }
 

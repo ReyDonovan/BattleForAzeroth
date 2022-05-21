@@ -25,5 +25,10 @@ namespace WorldPackets
         {
             _worldPacket >> AdventureJournalID;
         }
+
+        void AdventureMapStartQuest::Read()
+        {
+            _worldPacket >> QuestID;
+        }
     }
 }

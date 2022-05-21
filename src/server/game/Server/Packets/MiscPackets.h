@@ -948,16 +948,6 @@ namespace WorldPackets
             ObjectGuid SourceGuid;
         };
 
-        class AdventureJournalStartQuest final : public ClientPacket
-        {
-        public:
-            AdventureJournalStartQuest(WorldPacket&& packet) : ClientPacket(CMSG_ADVENTURE_JOURNAL_START_QUEST, std::move(packet)) { }
-
-            void Read() override;
-
-            uint32 QuestID;
-        };
-
         class FactionSelectUI final : public ServerPacket
         {
         public:

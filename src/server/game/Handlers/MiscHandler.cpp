@@ -1155,13 +1155,6 @@ void WorldSession::HandleCloseInteraction(WorldPackets::Misc::CloseInteraction& 
         _player->PlayerTalkClass->GetInteractionData().Reset();
 }
 
-void WorldSession::HandleAdventureJournalStartQuest(WorldPackets::Misc::AdventureJournalStartQuest& packet)
-{
-    if (Quest const* quest = sObjectMgr->GetQuestTemplate(packet.QuestID))
-        if (!_player->hasQuest(packet.QuestID))
-            _player->AddQuestAndCheckCompletion(quest, nullptr);
-}
-
 void WorldSession::HandleSelectFactionOpcode(WorldPackets::Misc::FactionSelect& selectFaction)
 {
     if (_player->getRace() != RACE_PANDAREN_NEUTRAL)

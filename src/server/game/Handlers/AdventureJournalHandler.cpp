@@ -42,3 +42,21 @@ void WorldSession::HandleAdventureJournalOpenQuest(WorldPackets::AdventureJourna
     if (_player->CanTakeQuest(quest, true))
         _player->PlayerTalkClass->SendQuestGiverQuestDetails(quest, _player->GetGUID(), true, false);
 }
+
+void WorldSession::HandleAdventureJournalStartQuest(WorldPackets::AdventureJournal::AdventureMapStartQuest& startQuest)
+{
+    Quest const* quest = sObjectMgr->GetQuestTemplate(startQuest.QuestID);
+    if (!quest)
+        return;
+
+    auto itr = std::find_if(sAdventureMapPOIStore.begin(), sAdventureMapPOIStore.end(), [&](AdventureMapPOIEntry const* adventureMap)
+    {
+        return adventureMap->QuestID == uint32(startQuest.QuestID) && _player->MeetPlayerCondition(adventureMap->PlayerConditionID);
+    });
+
+    if (itr == sAdventureMapPOIStore.end())
+        return;
+
+    if (_player->CanTakeQuest(quest, true))
+        _player->AddQuestAndCheckCompletion(quest, _player);
+}
