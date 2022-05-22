@@ -168,6 +168,7 @@ class TC_GAME_API AuraEffect
         void HandleAuraGhost(AuraApplication const* aurApp, uint8 mode, bool apply) const;
         void HandlePhase(AuraApplication const* aurApp, uint8 mode, bool apply) const;
         void HandlePhaseGroup(AuraApplication const* aurApp, uint8 mode, bool apply) const;
+        void HandlePhaseAlwaysVisible(AuraApplication const* aurApp, uint8 mode, bool apply) const;
         void HandleDetectAmore(AuraApplication const* aurApp, uint8 mode, bool apply) const;
 
         //  unit model

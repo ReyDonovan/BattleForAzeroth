@@ -562,7 +562,7 @@ void AddSC_tanaan_intro_blackrock()
     new npc_thrall_maladaar_blackrock();
     new npc_blackrock_follower();
     new npc_blackrock_grunt();
-    new npc_ogron_warcrusher();
+    new npc_ogron_warcrusher(); //80775 `type_flags` 2097224 81294 `type_flags` 2097224
     new npc_tanaan_ganar();
     new npc_tanaan_overseer_gotrigg();
     new gob_powder_keg();
