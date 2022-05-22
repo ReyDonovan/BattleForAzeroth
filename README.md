@@ -1,6 +1,7 @@
 # Bank Tinkoff: 5536 9140 7414 0637
 # Based code AshamaneCore 8.0.1 28153
 * [Our Discord](https://discord.gg/TjEsvRv)
+* [Full Client 8.0.1  build 28153](https://ftp.warcraft.life/repack/BFA/Client/8.0.1.28153_enus_full.rar)
 --------------
 
 
