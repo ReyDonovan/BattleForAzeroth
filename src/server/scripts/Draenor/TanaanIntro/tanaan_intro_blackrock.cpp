@@ -334,100 +334,52 @@ public:
 };
 
 /// 80775/81294 - Ogron Warcrusher
-class npc_ogron_warcrusher : public CreatureScript
+struct npc_ogron_warcrusher : public ScriptedAI
 {
-public:
-    npc_ogron_warcrusher() : CreatureScript("npc_ogron_warcrusher")
+    npc_ogron_warcrusher(Creature* creature) : ScriptedAI(creature) { }
+
+    enum eEvents
     {
+        EventAddaura = 1
+    };
+
+    void Reset() override
+    {
+        events.Reset();
+        events.ScheduleEvent(EventAddaura, 3000);
     }
 
-    CreatureAI* GetAI(Creature* creature) const override
+    void UpdateAI(uint32 diff) override
     {
-        return new npc_ogron_warcrusherAI(creature);
-    }
+        if (!UpdateVictim())
+            return;
 
-    struct npc_ogron_warcrusherAI : public ScriptedAI
-    {
-        npc_ogron_warcrusherAI(Creature* creature) : ScriptedAI(creature) { }
+        events.Update(diff);
 
-        EventMap m_Events;
+        if (me->HasUnitState(UNIT_STATE_CASTING))
+            return;
 
-        enum eEvents
+        while (uint32 eventId = events.ExecuteEvent())
         {
-            EventAddaura = 1
-        };
-
-        void Reset() override
-        {
-            m_Events.Reset();
-            m_Events.ScheduleEvent(EventAddaura, 3000);
-        }
-
-        void JustDied(Unit* killer) override
-        {
-            std::list<Player*> playerList;
-            GetPlayerListInGrid(playerList, me, 42.0f);
-
-            for (Player* player : playerList)
-            {
-                if (killer == player)
-                    continue;
-
-                if (player->GetQuestStatus(TanaanQuests::QuestTheBattleOfTheForge) == QUEST_STATUS_INCOMPLETE)
-                    player->KilledMonsterCredit(TanaanKillCredits::CreditOgronWarcrusher);
-            }
-        }
-
-        void UpdateAI(uint32 diff) override
-        {
-            if (!UpdateVictim() || me->HasUnitState(UNIT_STATE_CASTING))
-                return;
-
-            m_Events.Update(diff);
-
-            switch (m_Events.ExecuteEvent())
+            switch (eventId)
             {
                 case eEvents::EventAddaura:
                     me->AddAura(TanaanSpells::SpellCrushingStomp, me);
-                    m_Events.ScheduleEvent(eEvents::EventAddaura, 12000);
+                    events.ScheduleEvent(eEvents::EventAddaura, 12000);
+                    break;
+                default:
                     break;
             }
-        }
-    };
-};
 
-/// 80786 - Blackrock Grunt
-class npc_blackrock_grunt : public CreatureScript
-{
-public:
-    npc_blackrock_grunt() : CreatureScript("npc_blackrock_grunt")
-    {
+            if (me->HasUnitState(UNIT_STATE_CASTING))
+                return;
+        }
+
+        DoMeleeAttackIfReady();
     }
 
-    CreatureAI* GetAI(Creature* creature) const override
-    {
-        return new npc_blackrock_gruntAI(creature);
-    }
-
-    struct npc_blackrock_gruntAI : public ScriptedAI
-    {
-        npc_blackrock_gruntAI(Creature* creature) : ScriptedAI(creature) { }
-
-        void JustDied(Unit* killer) override
-        {
-            std::list<Player*> playerList;
-            GetPlayerListInGrid(playerList, me, 3.0f);
-
-            for (Player* player : playerList)
-            {
-                if (killer == player)
-                    continue;
-
-                if (player->GetQuestStatus(TanaanQuests::QuestTheBattleOfTheForge) == QUEST_STATUS_INCOMPLETE)
-                    player->KilledMonsterCredit(TanaanKillCredits::CreditBlackrockGrunt);
-            }
-        }
-    };
+private:
+    EventMap events;
 };
 
 /// 79917 - Ganar
@@ -561,8 +513,7 @@ void AddSC_tanaan_intro_blackrock()
 {
     new npc_thrall_maladaar_blackrock();
     new npc_blackrock_follower();
-    new npc_blackrock_grunt();
-    new npc_ogron_warcrusher(); //80775 `type_flags` 2097224 81294 `type_flags` 2097224
+    RegisterCreatureAI(npc_ogron_warcrusher);
     new npc_tanaan_ganar();
     new npc_tanaan_overseer_gotrigg();
     new gob_powder_keg();
