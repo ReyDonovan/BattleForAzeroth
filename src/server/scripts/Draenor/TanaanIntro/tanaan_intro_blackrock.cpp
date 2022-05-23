@@ -349,6 +349,17 @@ struct npc_ogron_warcrusher : public ScriptedAI
         events.ScheduleEvent(EventAddaura, 3000);
     }
 
+    void JustDied(Unit* killer) override
+    {
+        std::list<Player*> playerList;
+        GetPlayerListInGrid(playerList, me, 42.0f);
+        for (Player* player : playerList)
+        {
+            if (player->GetQuestStatus(TanaanQuests::QuestTheBattleOfTheForge) == QUEST_STATUS_INCOMPLETE)
+                player->KilledMonsterCredit(TanaanKillCredits::CreditOgronWarcrusher);
+        }
+    }
+
     void UpdateAI(uint32 diff) override
     {
         if (!UpdateVictim())
@@ -380,6 +391,24 @@ struct npc_ogron_warcrusher : public ScriptedAI
 
 private:
     EventMap events;
+};
+
+/// 80786 - Blackrock Grunt
+struct npc_blackrock_grunt : public ScriptedAI
+{
+    npc_blackrock_grunt(Creature* creature) : ScriptedAI(creature) { }
+
+    void JustDied(Unit* killer) override
+    {
+        std::list<Player*> playerList;
+        GetPlayerListInGrid(playerList, me, 3.0f);
+
+        for (Player* player : playerList)
+        {
+            if (player->GetQuestStatus(TanaanQuests::QuestTheBattleOfTheForge) == QUEST_STATUS_INCOMPLETE)
+                player->KilledMonsterCredit(TanaanKillCredits::CreditBlackrockGrunt);
+        }
+    }
 };
 
 /// 79917 - Ganar
@@ -514,6 +543,7 @@ void AddSC_tanaan_intro_blackrock()
     new npc_thrall_maladaar_blackrock();
     new npc_blackrock_follower();
     RegisterCreatureAI(npc_ogron_warcrusher);
+    RegisterCreatureAI(npc_blackrock_grunt);
     new npc_tanaan_ganar();
     new npc_tanaan_overseer_gotrigg();
     new gob_powder_keg();
