@@ -2271,6 +2271,9 @@ void World::SetInitialWorldSettings()
     TC_LOG_INFO("server.loading", "Loading scenario poi data");
     sScenarioMgr->LoadScenarioPOI();
 
+    TC_LOG_INFO("server.loading", "Loading phase names...");
+    sObjectMgr->LoadPhaseNames();
+
     TC_LOG_INFO("server.loading", "Loading active world quests...");
     sWorldQuestMgr->LoadActiveWorldQuests();
 

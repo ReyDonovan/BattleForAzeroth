@@ -23,11 +23,13 @@
 #include "Language.h"
 #include "Map.h"
 #include "MiscPackets.h"
+#include "ObjectAccessor.h"
 #include "ObjectMgr.h"
 #include "PartyPackets.h"
 #include "PhaseShift.h"
 #include "Player.h"
 #include "SpellAuraEffects.h"
+#include "Vehicle.h"
 
 namespace
 {
@@ -37,10 +39,10 @@ inline PhaseFlags GetPhaseFlags(uint32 phaseId)
 {
     if (PhaseEntry const* phase = sPhaseStore.LookupEntry(phaseId))
     {
-        if (phase->Flags & PHASE_FLAG_COSMETIC)
+        if (phase->GetFlags().HasFlag(PhaseEntryFlags::Cosmetic))
             return PhaseFlags::Cosmetic;
 
-        if (phase->Flags & PHASE_FLAG_PERSONAL)
+        if (phase->GetFlags().HasFlag(PhaseEntryFlags::Personal))
             return PhaseFlags::Personal;
     }
 
@@ -51,13 +53,19 @@ template<typename Func>
 inline void ForAllControlled(Unit* unit, Func&& func)
 {
     for (Unit* controlled : unit->m_Controlled)
-        if (controlled->GetTypeId() != TYPEID_PLAYER)
+        if (controlled->GetTypeId() != TYPEID_PLAYER
+            && !controlled->GetVehicle())                   // Player inside nested vehicle should not phase the root vehicle and its accessories (only direct root vehicle control does)
             func(controlled);
 
     for (ObjectGuid summonGuid : unit->m_SummonSlot)
         if (!summonGuid.IsEmpty())
             if (Creature* summon = unit->GetMap()->GetCreature(summonGuid))
                 func(summon);
+
+    if (Vehicle const* vehicle = unit->GetVehicleKit())
+        for (auto seat = vehicle->Seats.begin(); seat != vehicle->Seats.end(); ++seat)
+            if (Unit* passenger = ObjectAccessor::GetUnit(*unit, seat->second.Passenger.Guid))
+                func(passenger);
 }
 }
 
@@ -217,7 +225,7 @@ void PhasingHandler::OnMapChange(WorldObject* object)
     object->GetPhaseShift().UiMapPhaseIds.clear();
     object->GetSuppressedPhaseShift().VisibleMapIds.clear();
 
-    for (auto visibleMapPair : sObjectMgr->GetTerrainSwaps())
+    for (auto const& visibleMapPair : sObjectMgr->GetTerrainSwaps())
     {
         for (TerrainSwapInfo const* visibleMapInfo : visibleMapPair.second)
         {
@@ -464,9 +472,9 @@ void PhasingHandler::InitDbPhaseShift(PhaseShift& phaseShift, uint8 phaseUseFlag
     phaseShift.ClearPhases();
     phaseShift.IsDbPhaseShift = true;
 
-    EnumClassFlag<PhaseShiftFlags> flags = PhaseShiftFlags::None;
+    EnumFlag<PhaseShiftFlags> flags = PhaseShiftFlags::None;
     if (phaseUseFlags & PHASE_USE_FLAGS_ALWAYS_VISIBLE)
-        flags = flags | PhaseShiftFlags::AlwaysVisible | PhaseShiftFlags::Unphased;
+        flags |= PhaseShiftFlags::AlwaysVisible | PhaseShiftFlags::Unphased;
     if (phaseUseFlags & PHASE_USE_FLAGS_INVERSE)
         flags |= PhaseShiftFlags::Inverse;
 
@@ -525,7 +533,7 @@ void PhasingHandler::SetAlwaysVisible(WorldObject* object, bool apply, bool upda
     if (apply)
         object->GetPhaseShift().Flags |= PhaseShiftFlags::AlwaysVisible;
     else
-        object->GetPhaseShift().Flags &= ~EnumClassFlag<PhaseShiftFlags>(PhaseShiftFlags::AlwaysVisible);
+        object->GetPhaseShift().Flags &= ~PhaseShiftFlags::AlwaysVisible;
 
     UpdateVisibilityIfNeeded(object, updateVisibility, true);
 }
@@ -535,7 +543,7 @@ void PhasingHandler::SetInversed(WorldObject* object, bool apply, bool updateVis
     if (apply)
         object->GetPhaseShift().Flags |= PhaseShiftFlags::Inverse;
     else
-        object->GetPhaseShift().Flags &= ~EnumClassFlag<PhaseShiftFlags>(PhaseShiftFlags::Inverse);
+        object->GetPhaseShift().Flags &= PhaseShiftFlags::Inverse;
 
     object->GetPhaseShift().UpdateUnphasedFlag();
 
@@ -552,12 +560,13 @@ void PhasingHandler::PrintToChat(ChatHandler* chat, PhaseShift const& phaseShift
         std::string personal = sObjectMgr->GetTrinityString(LANG_PHASE_FLAG_PERSONAL, chat->GetSessionDbLocaleIndex());
         for (PhaseShift::PhaseRef const& phase : phaseShift.Phases)
         {
-            phases << phase.Id;
+            phases << "\r\n";
+            phases << ' ' << ' ' << ' ';
+            phases << phase.Id << ' ' << '(' << sObjectMgr->GetPhaseName(phase.Id) << ')';
             if (phase.Flags.HasFlag(PhaseFlags::Cosmetic))
                 phases << ' ' << '(' << cosmetic << ')';
             if (phase.Flags.HasFlag(PhaseFlags::Personal))
                 phases << ' ' << '(' << personal << ')';
-            phases << ", ";
         }
 
         chat->PSendSysMessage(LANG_PHASESHIFT_PHASES, phases.str().c_str());

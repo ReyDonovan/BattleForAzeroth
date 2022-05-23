@@ -20,6 +20,7 @@
 
 #include "Define.h"
 #include "DBCEnums.h"
+#include "EnumFlag.h"
 #include "Util.h"
 
 #pragma pack(push, 1)
@@ -2402,6 +2403,8 @@ struct PhaseEntry
 {
     uint32 ID;
     uint16 Flags;
+
+    EnumFlag<PhaseEntryFlags> GetFlags() const { return static_cast<PhaseEntryFlags>(Flags); }
 };
 
 struct PhaseXPhaseGroupEntry

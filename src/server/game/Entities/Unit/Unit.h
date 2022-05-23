@@ -1704,7 +1704,7 @@ class TC_GAME_API Unit : public WorldObject
         void SetVisible(bool x);
 
         // common function for visibility checks for player/creatures with detection code
-        void OnPhaseChange();
+        virtual void OnPhaseChange();
         void UpdateObjectVisibility(bool forced = true) override;
 
         SpellImmuneContainer m_spellImmune[MAX_SPELL_IMMUNITY];
@@ -1906,6 +1906,7 @@ class TC_GAME_API Unit : public WorldObject
         bool IsOnVehicle() const { return m_vehicle != NULL; }
         bool IsOnVehicle(const Unit* vehicle) const;
         Unit* GetVehicleBase()  const;
+        Unit* GetVehicleRoot() const;
         Creature* GetVehicleCreatureBase() const;
         ObjectGuid GetTransGUID()   const override;
         /// Returns the transport this unit is on directly (if on vehicle and transport, return vehicle)
